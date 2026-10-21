@@ -110,7 +110,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.9.0</div>
+<div id="verTag">v0.9.1</div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button></div>
 
@@ -160,7 +160,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.9.0</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.9.1</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -182,7 +182,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.9.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.9.1</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -259,6 +259,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <label class="field">중간톤 (높을수록 밝게) <span class="v" id="v_midtone"></span><input type="range" id="midtone" min="-0.6" max="0.8" step="0.05"></label>
       <label class="field">디테일 (국소 대비) <span class="v" id="v_detail"></span><input type="range" id="detail" min="0" max="1.5" step="0.05"></label>
       <label class="field">샤프닝 <span class="v" id="v_sharpen"></span><input type="range" id="sharpen" min="0" max="1.5" step="0.05"></label>
+      <label class="field">회색조 계조 부드럽게 (단계 사이 미세 디더링) <select id="grayDither"><option value="1">켜기 (계조 떡짐 방지, 추천)</option><option value="0">끄기 (16단계 그대로)</option></select></label>
       <label class="field">소프트스킨 (피부 매끈하게) <span class="v" id="v_softSkin"></span><input type="range" id="softSkin" min="0" max="1" step="0.05"></label>
       <label class="field">소프트스킨 적용 범위 <select id="skinOnly"><option value="1">피부색 부분만 (눈·머리카락·배경은 그대로)</option><option value="0">사진 전체</option></select></label>
       <label class="field">하이라이트 날리기 (피부 정리) <span class="v" id="v_whiteClip"></span><input type="range" id="whiteClip" min="0" max="0.25" step="0.01"></label>
@@ -618,12 +619,12 @@ const DEFAULTS = {
   density: 3, copies: 1, maxCopies: 4,
   stampOn: 1, stampPos: "inside", stampFmt: "film", stampText: "", stampSize: 2.6, autoLen: 1, printMode: "gray", grayChunk: 200, grayCalib: 1,
   labelLen: 67, areaX: 2, areaY: 2, areaW: 44, areaH: 52, rotate: 0,
-  autoLevel: 1, contrast: 1.25, midtone: 0.25, detail: 0.6, sharpen: 0.3, whiteClip: 0.06, softSkin: 0.5, skinOnly: 1,
+  autoLevel: 1, contrast: 1.25, midtone: 0.25, detail: 0.6, sharpen: 0.3, whiteClip: 0.06, softSkin: 0.5, skinOnly: 1, grayDither: 1,
   dither: "halftone", screenPx: 5, toneStep: 0.2, denoise: 0.5, dotScale: 1,
   cameraId: "", mirror: 1, mirrorPrint: 0, countdownSec: 3, camPos: "top", lookSec: 1, retakes: 2, reviewTimeout: 90,
   adminPin: "0000", printCount: 0,
 };
-const TONE_KEYS = ["printMode","softSkin","skinOnly","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx"];
+const TONE_KEYS = ["printMode","grayDither","softSkin","skinOnly","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx"];
 // 출력 방식마다 잘 맞는 보정값이 달라서 따로 저장한다
 const MODE_TONE = {
   gray: { softSkin: 0.5, skinOnly: 1, autoLevel: 1, contrast: 1.1, midtone: 0.1, detail: 0.35, sharpen: 0.3, whiteClip: 0.02, denoise: 0.2 },
@@ -1165,11 +1166,13 @@ function processPhoto(srcCanvas, outW, outH, tone, opt) {
     const mA = boxBlur(A, outW, outH, r), mB = boxBlur(Bc, outW, outH, r), k = Math.min(1, opt.softSkin * 1.2);
     for (let i = 0; i < n; i++) { const q = mA[i] * I[i] + mB[i], w = k * (skin ? Math.min(1, skin[i] * 1.3) : 1); g[i] = g[i] + w * (q - g[i]); }
   }
-  // 7-a) 회색조 출력: 디더링 없이 16단계로만 나눔 (미리보기도 실제 단계 그대로)
+  // 7-a) 회색조 출력: 16단계로 나눔. 단계 사이 값은 아주 미세한 블루노이즈로 섞어서 계단(떡짐)을 없앰
   if (opt.printMode === "gray") {
-    for (let i = 0; i < n; i++) {
-      const lv = 15 - Math.min(15, Math.floor(Math.min(1, Math.max(0, g[i])) * 255 / 17)); // 0=흰색 15=검정
-      const v = 255 - lv * 17; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255;
+    const dith = +opt.grayDither;
+    for (let y = 0; y < outH; y++) for (let x = 0; x < outW; x++) {
+      const i = y * outW + x, t = Math.min(1, Math.max(0, g[i])) * 15;          // 0=검정 ~ 15=흰색
+      const w = Math.min(15, Math.floor(dith ? t + blueNoise[(y % BN) * BN + (x % BN)] : t + 0.5));
+      const v = w * 17; d[i * 4] = d[i * 4 + 1] = d[i * 4 + 2] = v; d[i * 4 + 3] = 255; // 미리보기도 실제 단계 그대로
     }
     ctx.putImageData(id, 0, 0); return c;
   }
@@ -1587,7 +1590,7 @@ document.addEventListener("keydown", (e) => {
 });
 if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 
-const FIELDS = ["beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camPos","lookSec","retakes","reviewTimeout","adminPin"];
+const FIELDS = ["grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camPos","lookSec","retakes","reviewTimeout","adminPin"];
 const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
   sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + v + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
