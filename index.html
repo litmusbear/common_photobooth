@@ -62,9 +62,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 #reviewWrap{display:flex;gap:28px;align-items:center;justify-content:center;flex-wrap:wrap}
 .paper{background:#fbf8f2;padding:14px;border-radius:6px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
 #preview{display:block;height:min(62vh,640px);width:auto}
-.side{display:flex;flex-direction:column;gap:14px;align-items:stretch;min-width:240px}
+.side{display:flex;flex-direction:column;gap:14px;align-items:stretch;min-width:330px}
 .seg{display:flex;background:var(--panel);border:2px solid var(--line);border-radius:18px;padding:4px}
-.seg button{flex:1;padding:14px 10px;border-radius:14px;font-size:18px;font-weight:700;background:transparent;color:var(--mute)}
+.seg button{flex:1;white-space:nowrap;padding:14px 6px;border-radius:14px;font-size:18px;font-weight:700;background:transparent;color:var(--mute)}
 .seg button.on{background:var(--ink);color:var(--bg)}
 .label{font-size:14px;color:var(--mute);margin:4px 2px -6px}
 
@@ -110,7 +110,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.8.0</div>
+<div id="verTag">v0.9.0</div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button></div>
 
@@ -137,6 +137,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <div class="seg" id="toneSeg">
         <button data-t="-1">어둡게</button><button data-t="0" class="on">기본</button><button data-t="1">밝게</button>
       </div>
+      <div id="beautyWrap"><div class="label" style="margin-bottom:6px">얼굴 보정 <span id="beautyNote" style="font-size:.85em"></span></div>
+        <div class="seg" id="beautySeg"><button data-b="0">없음</button><button data-b="1">자연스럽게</button><button data-b="2">강하게</button></div></div>
       <div id="copyWrap"><div class="label" style="margin-bottom:6px">몇 장 뽑을까요? <span style="font-size:.85em">(같이 찍은 인원만큼)</span></div>
         <div class="seg" id="copySeg"></div></div>
       <button class="btn" id="retake">다시 찍기 <span id="retakeLeft" style="color:var(--mute);font-size:.8em"></span></button>
@@ -158,7 +160,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.8.0</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.9.0</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -180,7 +182,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.8.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.9.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -226,6 +228,17 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
     </div>
     <p class="note" id="paperInfo">용지 정보: 프린터를 연결하면 용지 칩(RFID)에서 크기를 읽어와요.</p>
     <p class="note">B1 Pro는 헤드 폭이 약 48mm(567픽셀)라 X+W는 48mm 안에 들어가야 해요. 테스트 출력을 하면 사진 영역에 테두리와 눈금이 찍히니, SNS 디자인과 겹치는지 보고 숫자를 조정하세요.</p>
+  </div>
+
+  <div class="card"><h3>얼굴 보정 (갸름하게 · 눈 크게)</h3>
+    <div class="grid">
+      <label class="field">얼굴 보정 <select id="beautyOn"><option value="1">켜기 (손님이 단계 선택)</option><option value="0">끄기</option></select></label>
+      <label class="field">처음 선택된 단계 <select id="beautyDefault"><option value="0">없음</option><option value="1">자연스럽게</option><option value="2">강하게</option></select></label>
+      <label class="field">갸름하게 세기 <span class="v" id="v_faceSlim"></span><input type="range" id="faceSlim" min="0" max="1" step="0.05"></label>
+      <label class="field">눈 크게 세기 <span class="v" id="v_eyeBig"></span><input type="range" id="eyeBig" min="0" max="1" step="0.05"></label>
+    </div>
+    <p class="note" id="faceInfo">얼굴 인식: 준비 전</p>
+    <p class="note">찍은 사진에서 얼굴을 찾아(여러 명도 가능) 턱선을 살짝 안쪽으로, 눈을 살짝 크게 바꿔요. "강하게"는 위 세기의 100%, "자연스럽게"는 55%로 적용돼요. 얼굴 인식 파일(facemesh 폴더)이 index.html 옆에 있어야 동작해요.</p>
   </div>
 
   <div class="card"><h3>날짜 도장</h3>
@@ -601,6 +614,7 @@ const HEAD_PX_DEFAULT = 567; // B1 Pro
 /* ---------------- 설정 ---------------- */
 const DEFAULTS = {
   printVia: "local", stationCode: "",
+  beautyOn: 1, beautyDefault: 1, faceSlim: 0.5, eyeBig: 0.5,
   density: 3, copies: 1, maxCopies: 4,
   stampOn: 1, stampPos: "inside", stampFmt: "film", stampText: "", stampSize: 2.6, autoLen: 1, printMode: "gray", grayChunk: 200, grayCalib: 1,
   labelLen: 67, areaX: 2, areaY: 2, areaW: 44, areaH: 52, rotate: 0,
@@ -1300,6 +1314,119 @@ function buildLabel(photoSrc, tone, opt, testPattern) {
 }
 function toneOpts() { const o = {}; TONE_KEYS.forEach(k => o[k] = (k === "dither" || k === "printMode") ? S[k] : +S[k]); return o; }
 
+/* ---------------- 얼굴 보정 (MediaPipe Face Mesh, 468점) ----------------
+   찍은 사진에서 얼굴 윤곽점을 찾고, 턱선 점들을 코 쪽으로 살짝 옮기는 변형(갸름하게)과
+   눈 중심 둘레를 살짝 확대하는 변형(눈 크게)을 적용한다. 모델 파일은 facemesh/ 폴더에서 불러온다. */
+let fm = null, fmReady = false, fmLoading = null, fmQueue = Promise.resolve();
+function setFaceInfo(t) { const el = $("faceInfo"); if (el) el.textContent = "얼굴 인식: " + t; }
+function loadFaceMesh() {
+  if (fmLoading) return fmLoading;
+  setFaceInfo("불러오는 중…");
+  fmLoading = new Promise((resolve) => {
+    const sc = document.createElement("script"); sc.src = "facemesh/face_mesh.js";
+    sc.onload = async () => {
+      try {
+        fm = new FaceMesh({ locateFile: (f) => "facemesh/" + f });
+        fm.setOptions({ maxNumFaces: 6, refineLandmarks: false, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+        await fm.initialize(); fmReady = true; setFaceInfo("준비됨");
+      } catch (e) { setFaceInfo("시작하지 못했어요 (" + (e.message || e) + ")"); }
+      resolve(fmReady);
+    };
+    sc.onerror = () => { setFaceInfo("파일을 찾지 못했어요. facemesh 폴더를 index.html 옆에 올려 주세요."); resolve(false); };
+    document.head.appendChild(sc);
+  });
+  return fmLoading;
+}
+function detectFaces(canvas) {
+  const job = fmQueue.then(async () => {
+    if (!(await loadFaceMesh())) return null;
+    const k = Math.min(1, 720 / Math.max(canvas.width, canvas.height));
+    const c = document.createElement("canvas"); c.width = Math.round(canvas.width * k); c.height = Math.round(canvas.height * k);
+    c.getContext("2d").drawImage(canvas, 0, 0, c.width, c.height);
+    try { if (fm.reset) fm.reset(); } catch (e) {}
+    return await new Promise((res) => {
+      let done = false; const fin = (v) => { if (!done) { done = true; res(v); } };
+      fm.onResults((r) => fin((r.multiFaceLandmarks || []).map((l) => l.map((p) => ({ x: p.x, y: p.y })))));
+      fm.send({ image: c }).catch(() => fin(null));
+      setTimeout(() => fin(null), 15000);
+    });
+  });
+  fmQueue = job.catch(() => {}); return job;
+}
+const EYE_A = [33, 133, 159, 145], EYE_B = [362, 263, 386, 374];
+function beautify(src, faces, level) {
+  const k = level >= 2 ? 1 : level >= 1 ? 0.55 : 0, slim = (+S.faceSlim) * k, eye = (+S.eyeBig) * k;
+  if (!faces || !faces.length || (slim <= 0 && eye <= 0)) return src;
+  const W = src.width, H = src.height;
+  const out = document.createElement("canvas"); out.width = W; out.height = H;
+  const octx = out.getContext("2d", { willReadFrequently: true }); octx.drawImage(src, 0, 0);
+  const img = octx.getImageData(0, 0, W, H), od = img.data;
+  for (const L of faces) {
+    const sd = od.slice(); // 앞 얼굴의 변형 결과 위에 이어서 적용
+    const P = (i) => ({ x: L[i].x * W, y: L[i].y * H });
+    const avg = (ids) => { let x = 0, y = 0; ids.forEach((i) => { x += L[i].x * W; y += L[i].y * H; }); return { x: x / ids.length, y: y / ids.length }; };
+    const faceW = Math.hypot(P(234).x - P(454).x, P(234).y - P(454).y); if (faceW < 20) continue;
+    const nose = P(4), warps = [];
+    if (eye > 0) for (const ids of [EYE_A, EYE_B]) {
+      const a = P(ids[0]), b = P(ids[1]), R = Math.hypot(a.x - b.x, a.y - b.y) * 1.15;
+      warps.push({ t: 0, c: avg(ids), R2: R * R, k: 0.35 * eye });
+    }
+    if (slim > 0) { // 얼굴 축 기준으로 볼~턱 높이의 얼굴 가장자리만 안쪽으로 당김 (매끄러운 하나의 변형장, 접힘 없음)
+      const c0 = { x: (P(234).x + P(454).x) / 2, y: (P(234).y + P(454).y) / 2 }, chin = P(152);
+      const L0 = Math.hypot(chin.x - c0.x, chin.y - c0.y) || 1, dir = { x: (chin.x - c0.x) / L0, y: (chin.y - c0.y) / L0 };
+      warps.push({ t: 1, c0, dir, perp: { x: -dir.y, y: dir.x }, L: L0, hw: faceW / 2, a: 0.16 * slim });
+    }
+    let x0 = W, y0 = H, x1 = 0, y1 = 0; L.forEach((p) => { x0 = Math.min(x0, p.x * W); y0 = Math.min(y0, p.y * H); x1 = Math.max(x1, p.x * W); y1 = Math.max(y1, p.y * H); });
+    const pad = faceW * 0.35; x0 = Math.max(0, Math.floor(x0 - pad)); y0 = Math.max(0, Math.floor(y0 - pad)); x1 = Math.min(W - 1, Math.ceil(x1 + pad)); y1 = Math.min(H - 1, Math.ceil(y1 + pad));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      let px = x, py = y;
+      for (let w = warps.length - 1; w >= 0; w--) { // 결과 픽셀이 원본의 어디에서 왔는지 거꾸로 계산
+        const q = warps[w];
+        if (q.t === 0) { const dx = px - q.c.x, dy = py - q.c.y, r2 = dx * dx + dy * dy; if (r2 < q.R2) { const f = 1 - q.k * (1 - r2 / q.R2); px = q.c.x + dx * f; py = q.c.y + dy * f; } }
+        else {
+          const rx = px - q.c0.x, ry = py - q.c0.y, v = rx * q.dir.x + ry * q.dir.y, u = rx * q.perp.x + ry * q.perp.y;
+          const ss = (e0, e1, z) => { const t = Math.min(1, Math.max(0, (z - e0) / (e1 - e0))); return t * t * (3 - 2 * t); };
+          const wy = ss(-0.15 * q.L, 0.4 * q.L, v) * (1 - ss(q.L, 1.35 * q.L, v));          // 광대 아래 ~ 턱 끝, 목으로 갈수록 0
+          const au = Math.abs(u), z = (au - 0.95 * q.hw) / (0.45 * q.hw), wu = Math.exp(-z * z); // 얼굴 가장자리에서 가장 큼
+          const du = Math.sign(u) * q.a * q.hw * wy * wu;                                      // 바깥쪽에서 가져옴 = 안쪽으로 당겨짐
+          px += q.perp.x * du; py += q.perp.y * du;
+        }
+      }
+      if (px === x && py === y) continue;
+      const ix = Math.max(0, Math.min(W - 2, Math.floor(px))), iy = Math.max(0, Math.min(H - 2, Math.floor(py))), fx = Math.min(1, Math.max(0, px - ix)), fy = Math.min(1, Math.max(0, py - iy));
+      const o = (y * W + x) * 4, a = (iy * W + ix) * 4, b = a + 4, c2 = a + W * 4, d2 = c2 + 4;
+      for (let ch = 0; ch < 3; ch++) od[o + ch] = (sd[a + ch] * (1 - fx) + sd[b + ch] * fx) * (1 - fy) + (sd[c2 + ch] * (1 - fx) + sd[d2 + ch] * fx) * fy;
+    }
+  }
+  octx.putImageData(img, 0, 0); return out;
+}
+// 찍은 사진 + 얼굴 정보 + 단계별 결과 캐시
+let shotFaces = null, shotFacesFor = null, warpCache = {}, beautyLevel = 1, facesPending = false;
+function analyzeShot(shot) {
+  shotFaces = null; shotFacesFor = shot; warpCache = {};
+  if (!+S.beautyOn || !shot) { facesPending = false; return; }
+  facesPending = true; updateBeautyUI();
+  detectFaces(shot).then((f) => {
+    if (shotFacesFor !== shot) return;
+    shotFaces = f; facesPending = false; warpCache = {};
+    setFaceInfo(f === null ? "얼굴을 찾지 못했어요 (인식 실패)" : `준비됨 · 마지막 사진에서 얼굴 ${f.length}개 찾음`);
+    updateBeautyUI();
+    if (screen === "review") renderPreview();
+    if ($("admin").classList.contains("on")) renderAdminPreview();
+  });
+}
+function shotFor(shot, level) {
+  if (!shot || !+S.beautyOn || shot !== shotFacesFor || !shotFaces || !shotFaces.length || !level) return shot;
+  return warpCache[level] || (warpCache[level] = beautify(shot, shotFaces, level));
+}
+function updateBeautyUI() {
+  const wrap = $("beautyWrap"); if (!wrap) return;
+  wrap.style.display = +S.beautyOn ? "block" : "none";
+  const none = !facesPending && (!shotFaces || !shotFaces.length);
+  $("beautyNote").textContent = facesPending ? "(얼굴 찾는 중…)" : none ? "(얼굴을 찾지 못했어요)" : "";
+  document.querySelectorAll("#beautySeg button").forEach((b) => { b.classList.toggle("on", +b.dataset.b === beautyLevel); b.disabled = facesPending || none; });
+}
+
 /* ---------------- 진행 흐름 ---------------- */
 let lastShot = null, tone = 0, retakesLeft = 0, lastLabel = null;
 async function startSession() {
@@ -1334,6 +1461,7 @@ function capture() {
   const f = $("flash"); f.classList.add("on"); beep(1200, 0.15);
   requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove("on")));
   lastShot = grabFrame(); stopCamera();
+  beautyLevel = Math.min(2, Math.max(0, +S.beautyDefault)); analyzeShot(lastShot);
   showReview();
 }
 let selCopies = 1;
@@ -1349,7 +1477,7 @@ function buildCopySeg() {
   $("doPrint").textContent = selCopies > 1 ? `${selCopies}장 출력하기` : "출력하기";
 }
 function showReview() {
-  show("review"); buildCopySeg();
+  show("review"); buildCopySeg(); updateBeautyUI();
   document.querySelectorAll("#toneSeg button").forEach(b => b.classList.toggle("on", +b.dataset.t === tone));
   $("retake").disabled = retakesLeft <= 0;
   $("retakeLeft").textContent = retakesLeft > 0 ? `(${retakesLeft}번 남음)` : "";
@@ -1357,7 +1485,7 @@ function showReview() {
   later(() => { if (screen === "review" && !printing) goIdle(); }, S.reviewTimeout * 1000);
 }
 function renderPreview() {
-  lastLabel = buildLabel(lastShot, tone, toneOpts());
+  lastLabel = buildLabel(shotFor(lastShot, beautyLevel), tone, toneOpts());
   const p = $("preview"); p.width = lastLabel.width; p.height = lastLabel.height;
   p.getContext("2d").drawImage(lastLabel, 0, 0);
 }
@@ -1420,6 +1548,9 @@ $("copySeg").addEventListener("click", (e) => {
   document.querySelectorAll("#copySeg button").forEach(x => x.classList.toggle("on", x === b));
   $("doPrint").textContent = selCopies > 1 ? `${selCopies}장 출력하기` : "출력하기";
 });
+$("beautySeg").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b || b.disabled) return; beautyLevel = +b.dataset.b; updateBeautyUI(); renderPreview();
+});
 $("doPrint").onclick = doPrint;
 $("revCancel").onclick = goIdle;
 $("done").onclick = goIdle;
@@ -1456,10 +1587,10 @@ document.addEventListener("keydown", (e) => {
 });
 if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 
-const FIELDS = ["softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camPos","lookSec","retakes","reviewTimeout","adminPin"];
+const FIELDS = ["beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camPos","lookSec","retakes","reviewTimeout","adminPin"];
 const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
-  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + v + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
+  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + v + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
 function fillAdmin() {
   FIELDS.forEach(f => { const el = $(f); if (el && el !== document.activeElement) el.value = S[f]; });
   Object.keys(VIEW).forEach(f => { const v = $("v_" + f.replace("Sec", "")) || $("v_" + f); if (v) v.textContent = VIEW[f](S[f]); });
@@ -1479,7 +1610,9 @@ function readAdmin() {
   if (!/^\d{4}$/.test(S.adminPin)) S.adminPin = "0000";
   S.stationCode = cleanCode(S.stationCode);
   if (S.printVia !== prevVia || S.stationCode !== prevCode) { if (viaStation()) connectStation(); else { if (stConn) try { stConn.close(); } catch (e) {} stConn = null; stState = null; setStationUI(); } }
+  warpCache = {};
   saveSettings(); fillAdmin(); renderAdminPreview();
+  if (+S.beautyOn && !fmLoading && !IS_STATION) loadFaceMesh();
   if (liveOn && liveCam !== S.cameraId) { stopLive(); startLive(); } // 카메라를 바꾸면 다시 켜기
   if (liveOn) $("liveVideo").style.transform = S.mirror ? "scaleX(-1)" : "none";
 }
@@ -1497,7 +1630,7 @@ function sampleImage() { // 사진이 없을 때 쓰는 그라데이션 + 원 �
 }
 function renderAdminPreview() {
   if (liveOn) return; // 실시간 보기 중에는 루프가 그림
-  const lab = buildLabel(lastShot || sampleImage(), 0, toneOpts());
+  const lab = buildLabel(lastShot ? shotFor(lastShot, +S.beautyDefault) : sampleImage(), 0, toneOpts());
   const p = $("adminPreview"); p.width = lab.width; p.height = lab.height; p.getContext("2d").drawImage(lab, 0, 0);
 }
 /* 관리자 실시간 보기 */
@@ -1528,7 +1661,7 @@ function stopLive() {
   $("aLiveSnap").disabled = $("aLivePrint").disabled = true;
   $("liveInfo").textContent = "실시간 보기를 껐어요.";
 }
-function snapLive() { if (!liveOn) return null; lastShot = grabFrame($("liveVideo")); return lastShot; }
+function snapLive() { if (!liveOn) return null; lastShot = grabFrame($("liveVideo")); analyzeShot(lastShot); return lastShot; }
 $("aLive").onclick = () => liveOn ? stopLive() : startLive();
 $("aLiveSnap").onclick = () => { if (snapLive()) { stopLive(); renderAdminPreview(); $("liveInfo").textContent = "이 장면을 고정했어요. \"마지막 사진 다시 출력\"으로도 뽑을 수 있어요."; } };
 $("aLivePrint").onclick = () => { const f = snapLive(); if (f) adminPrint(buildLabel(f, 0, toneOpts())); };
@@ -1566,6 +1699,7 @@ if (IS_STATION) {
   $("stNewCode").onclick = () => { try { localStorage.setItem("booth.stationCode", randCode()); } catch (e) {} startStationHost(); };
   startStationHost(); stBroadcast(); setInterval(stBroadcast, 5000);
 } else if (viaStation()) connectStation();
+if (!IS_STATION && +S.beautyOn) setTimeout(loadFaceMesh, 1500);
 if (!IS_STATION) setInterval(() => { if (viaStation()) { const was = $("pDot").classList.contains("ok"); if (was !== printReady()) setStationUI(); } }, 3000);
 // 화면 꺼짐 방지 (지원하는 브라우저만)
 async function keepAwake() { try { if (navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch (e) {} }
