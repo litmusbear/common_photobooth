@@ -113,6 +113,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .field{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--mute)}
 .field .v{color:var(--ink);font-variant-numeric:tabular-nums}
 .field input[type=range]{width:100%;accent-color:var(--accent)}
+#skinSlider{outline:none;width:100%;height:44px;accent-color:var(--accent);-webkit-appearance:none;appearance:none;background:transparent}
+#skinSlider::-webkit-slider-runnable-track{height:10px;border-radius:5px;background:linear-gradient(90deg,var(--line),var(--accent))}
+#skinSlider::-webkit-slider-thumb{-webkit-appearance:none;width:34px;height:34px;border-radius:50%;background:var(--ink);margin-top:-12px;box-shadow:0 2px 8px rgba(0,0,0,.5)}
 .field input[type=number],.field select,.field input[type=password]{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:16px}
 .note{font-size:13px;color:var(--mute);line-height:1.5;margin:8px 0 0}
 #adminPreview{background:#fbf8f2;max-width:100%;height:auto;max-height:420px;border-radius:4px}
@@ -136,7 +139,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.11.0</div>
+<div id="verTag">v1.0.0</div>
 <div id="warnBar"><span id="warnText"></span><button class="btn small" id="warnBtn" style="display:none">다시 연결</button></div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
@@ -170,6 +173,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <div class="seg" id="toneSeg">
         <button data-t="-1">어둡게</button><button data-t="0" class="on">기본</button><button data-t="1">밝게</button>
       </div>
+      <div id="skinWrap"><div class="label" style="margin-bottom:6px">피부 매끄럽게 <span id="skinVal" style="font-size:.85em"></span></div>
+        <input type="range" id="skinSlider" min="0" max="100" step="5"></div>
       <div id="beautyWrap"><div class="label" style="margin-bottom:6px">얼굴 보정 <span id="beautyNote" style="font-size:.85em"></span></div>
         <div class="seg" id="beautySeg"><button data-b="0">없음</button><button data-b="1">자연스럽게</button><button data-b="2">강하게</button></div></div>
       <div id="copyWrap"><div class="label" style="margin-bottom:6px">몇 장 뽑을까요? <span style="font-size:.85em">(같이 찍은 인원만큼)</span></div>
@@ -194,7 +199,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.11.0</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.0.0</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -216,7 +221,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.11.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.0.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -305,7 +310,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <label class="field">디테일 (국소 대비) <span class="v" id="v_detail"></span><input type="range" id="detail" min="0" max="1.5" step="0.05"></label>
       <label class="field">샤프닝 <span class="v" id="v_sharpen"></span><input type="range" id="sharpen" min="0" max="1.5" step="0.05"></label>
       <label class="field">회색조 계조 부드럽게 (단계 사이 미세 디더링) <select id="grayDither"><option value="1">켜기 (계조 떡짐 방지, 추천)</option><option value="0">끄기 (16단계 그대로)</option></select></label>
-      <label class="field">소프트스킨 (피부 매끈하게) <span class="v" id="v_softSkin"></span><input type="range" id="softSkin" min="0" max="1" step="0.05"></label>
+      <label class="field">소프트스킨 처음 값 (손님이 확인 화면에서 바꿀 수 있음) <span class="v" id="v_softSkin"></span><input type="range" id="softSkin" min="0" max="1" step="0.05"></label>
       <label class="field">소프트스킨 적용 범위 <select id="skinOnly"><option value="1">피부색 부분만 (눈·머리카락·배경은 그대로)</option><option value="0">사진 전체</option></select></label>
       <label class="field">하이라이트 날리기 (피부 정리) <span class="v" id="v_whiteClip"></span><input type="range" id="whiteClip" min="0" max="0.25" step="0.01"></label>
       <label class="field">디더링 (흑백 점 모드에서만) <select id="dither"><option value="halftone">망점 (신문 인쇄식, 감열지 추천)</option><option value="atkinson">Atkinson (자연스러운 점)</option><option value="blue">블루 노이즈 (무작위 점)</option><option value="floyd">Floyd–Steinberg (부드러움)</option><option value="bayer">Bayer (격자 무늬)</option><option value="threshold">흑백 2단 (만화풍)</option></select></label>
@@ -1652,7 +1657,7 @@ function capture() {
   const f = $("flash"); f.classList.add("on"); beep(1200, 0.15);
   requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove("on")));
   lastShot = grabFrame(); stopCamera();
-  beautyLevel = Math.min(2, Math.max(0, +S.beautyDefault)); analyzeShot(lastShot);
+  beautyLevel = Math.min(2, Math.max(0, +S.beautyDefault)); skinLevel = Math.min(1, Math.max(0, +S.softSkin)); analyzeShot(lastShot);
   showReview();
 }
 let selCopies = 1;
@@ -1668,15 +1673,19 @@ function buildCopySeg() {
   $("doPrint").textContent = selCopies > 1 ? `${selCopies}장 출력하기` : "출력하기";
 }
 function showReview() {
-  show("review"); buildCopySeg(); updateBeautyUI();
+  show("review"); buildCopySeg(); updateBeautyUI(); updateSkinUI();
   document.querySelectorAll("#toneSeg button").forEach(b => b.classList.toggle("on", +b.dataset.t === tone));
   $("retake").disabled = retakesLeft <= 0;
   $("retakeLeft").textContent = retakesLeft > 0 ? `(${retakesLeft}번 남음)` : "";
   renderPreview();
   later(() => { if (screen === "review" && !printing) goIdle(); }, S.reviewTimeout * 1000);
 }
+// 확인 화면에서 손님이 고르는 피부 매끄럽게 정도 (처음 값 = 관리자 메뉴의 소프트스킨 세기)
+let skinLevel = 0.5, skinTimer = null;
+function updateSkinUI() { $("skinSlider").value = Math.round(skinLevel * 100); $("skinVal").textContent = skinLevel > 0 ? Math.round(skinLevel * 100) + "%" : "끄기"; }
 function renderPreview() {
-  lastLabel = buildLabel(shotFor(lastShot, beautyLevel), tone, toneOptsFor(lastShot));
+  const o = toneOptsFor(lastShot); o.softSkin = skinLevel;
+  lastLabel = buildLabel(shotFor(lastShot, beautyLevel), tone, o);
   const p = $("preview"); p.width = lastLabel.width; p.height = lastLabel.height;
   p.getContext("2d").drawImage(lastLabel, 0, 0);
 }
@@ -1745,6 +1754,10 @@ $("copySeg").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b) return; selCopies = +b.dataset.n;
   document.querySelectorAll("#copySeg button").forEach(x => x.classList.toggle("on", x === b));
   $("doPrint").textContent = selCopies > 1 ? `${selCopies}장 출력하기` : "출력하기";
+});
+$("skinSlider").addEventListener("input", () => {
+  skinLevel = +$("skinSlider").value / 100; $("skinVal").textContent = skinLevel > 0 ? Math.round(skinLevel * 100) + "%" : "끄기";
+  clearTimeout(skinTimer); skinTimer = setTimeout(renderPreview, 120); // 움직이는 동안은 잠깐 기다렸다가 다시 그림
 });
 $("beautySeg").addEventListener("click", (e) => {
   const b = e.target.closest("button"); if (!b || b.disabled) return; beautyLevel = +b.dataset.b; updateBeautyUI(); renderPreview();
@@ -1897,8 +1910,8 @@ async function offlineStatus() {
     const reg = await navigator.serviceWorker.getRegistration();
     const names = await caches.keys(), mine = names.filter(n => n.startsWith("booth-"));
     let files = 0; for (const n of mine) files += (await (await caches.open(n)).keys()).length;
-    const cur = mine.includes("booth-v0.11.0");
-    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v0.11.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
+    const cur = mine.includes("booth-v1.0.0");
+    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.0.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
   } catch (e) { el.textContent = "확인하지 못했어요: " + (e.message || e); }
 }
 if ("serviceWorker" in navigator && location.protocol !== "file:") {

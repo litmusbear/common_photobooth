@@ -1,5 +1,5 @@
 // 감열지 포토부스 오프라인 저장용 서비스 워커 (build.py 가 만듦)
-const CACHE = "booth-v0.11.0";
+const CACHE = "booth-v1.0.0";
 const FILES = ["./", "index.html", "facemesh/face_mesh.binarypb", "facemesh/face_mesh.js", "facemesh/face_mesh_solution_packed_assets.data", "facemesh/face_mesh_solution_packed_assets_loader.js", "facemesh/face_mesh_solution_simd_wasm_bin.data", "facemesh/face_mesh_solution_simd_wasm_bin.js", "facemesh/face_mesh_solution_simd_wasm_bin.wasm", "facemesh/face_mesh_solution_wasm_bin.js", "facemesh/face_mesh_solution_wasm_bin.wasm"];
 
 self.addEventListener("install", (e) => {
