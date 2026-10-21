@@ -112,7 +112,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.10.0</div>
+<div id="verTag">v0.10.1</div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button></div>
 
@@ -163,7 +163,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.0</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.1</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -185,7 +185,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.1</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -291,7 +291,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <label class="field">미리보기 좌우반전 <select id="mirror"><option value="1">켜기 (거울처럼)</option><option value="0">끄기</option></select></label>
       <label class="field">출력도 좌우반전 <select id="mirrorPrint"><option value="0">끄기</option><option value="1">켜기</option></select></label>
       <label class="field">카메라 위치 (화면 기준) <select id="camPos"><option value="top">위 가운데</option><option value="topleft">위 왼쪽</option><option value="topright">위 오른쪽</option><option value="left">왼쪽 가운데</option><option value="right">오른쪽 가운데</option><option value="bottom">아래 가운데</option></select></label>
-      <label class="field">"카메라를 보세요" 안내 <span class="v" id="v_lookSec"></span><input type="range" id="lookSec" min="0" max="3" step="1"></label>
+      <label class="field">"카메라를 보세요" 안내 <span class="v" id="v_lookSec"></span><input type="range" id="lookSec" min="0" max="3" step="0.125"></label>
       <label class="field">촬영 시작 방식 <select id="camReady"><option value="1">화면을 먼저 보여주고 "촬영하기" 버튼으로 시작</option><option value="0">터치하면 바로 카운트다운</option></select></label>
       <label class="field">카운트다운 (초) <span class="v" id="v_countdown"></span><input type="range" id="countdownSec" min="1" max="10" step="1"></label>
       <label class="field">다시 찍기 허용 횟수 <span class="v" id="v_retakes"></span><input type="range" id="retakes" min="0" max="5" step="1"></label>
@@ -1462,13 +1462,17 @@ function placeLook() {
 }
 function runCountdown() {
   const cd0 = $("countdown"); cd0.style.left = cd0.style.top = cd0.style.transform = ""; $("cam").classList.remove("look");
-  const el = $("countdown"); let n = +S.countdownSec;
+  const el = $("countdown"), total = +S.countdownSec * 1000, look = Math.max(0, +S.lookSec) * 1000, t0 = performance.now();
+  let shown = -1;
   const tick = () => {
     if (screen !== "cam") return;
-    const look = +S.lookSec > 0 && n > 0 && n <= +S.lookSec;
-    $("cam").classList.toggle("look", look); if (look) placeLook();
-    if (n > 0) { el.textContent = n; beep(660, 0.08); n--; later(tick, 1000); }
-    else { el.textContent = ""; capture(); $("cam").classList.remove("look"); }
+    const left = total - (performance.now() - t0);
+    if (left <= 0) { el.textContent = ""; $("cam").classList.remove("look"); capture(); return; }
+    const sec = Math.ceil(left / 1000);
+    if (sec !== shown) { shown = sec; el.textContent = sec; beep(660, 0.08); }
+    const lk = look > 0 && left <= look;                     // 0.125초 단위로 "카메라를 보세요" 시작
+    if (lk !== $("cam").classList.contains("look")) { $("cam").classList.toggle("look", lk); if (lk) placeLook(); }
+    later(tick, Math.min(125, left));
   };
   tick();
 }
@@ -1610,7 +1614,7 @@ if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 const FIELDS = ["grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
 const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
-  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + v + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
+  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
 function fillAdmin() {
   FIELDS.forEach(f => { const el = $(f); if (el && el !== document.activeElement) el.value = S[f]; });
   Object.keys(VIEW).forEach(f => { const v = $("v_" + f.replace("Sec", "")) || $("v_" + f); if (v) v.textContent = VIEW[f](S[f]); });
