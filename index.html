@@ -241,7 +241,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <label class="field">확인 화면 자동 종료 (초) <span class="v" id="v_reviewTimeout"></span><input type="range" id="reviewTimeout" min="20" max="180" step="10"></label>
       <label class="field">관리자 PIN (4자리) <input type="password" id="adminPin" inputmode="numeric" maxlength="4"></label>
     </div>
-    <div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn small" id="aRefreshCams">카메라 목록 새로고침</button></div>
+    <div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn small" id="aRefreshCams">카메라 목록 새로고침</button><button class="btn small" id="aCamTest">카메라 진단</button></div>
+    <p class="note" id="camDiag"></p>
     <p class="note">외장 카메라(Zf 등)는 연결한 뒤 "카메라 목록 새로고침"을 누르면 목록에 나타나요. 안 보이면 이 브라우저에서는 외장 카메라를 지원하지 않는 거라 내장 카메라를 써야 해요.</p>
   </div>
 
@@ -786,6 +787,31 @@ async function startCamera(v = $("video")) {
   await new Promise(r => { if (v.videoWidth) r(); else v.onloadedmetadata = () => r(); });
   if (v === $("video")) layoutGuide();
 }
+function camErrorText(e) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+    return "이 브라우저는 웹페이지에서 카메라를 쓸 수 없어요 (카메라 기능 자체가 없음).";
+  const n = e && e.name;
+  if (n === "NotAllowedError") return "카메라 권한이 거부됐어요. 아이패드 설정 → 이 브라우저 앱 → 카메라를 켜고, 페이지를 새로고침하세요. (" + n + ")";
+  if (n === "NotFoundError" || n === "OverconstrainedError") return "고른 카메라를 찾지 못했어요. 관리자 메뉴에서 다른 카메라를 골라 보세요. (" + n + ")";
+  if (n === "NotReadableError") return "다른 앱이 카메라를 쓰고 있어요. 다른 앱을 닫고 다시 시도하세요. (" + n + ")";
+  return "오류: " + (n || "") + " " + ((e && e.message) || e);
+}
+async function camDiagnose() {
+  const out = [];
+  out.push("보안 연결(HTTPS): " + (window.isSecureContext ? "예" : "아니요 — https 주소로 열어야 해요"));
+  out.push("카메라 기능: " + (navigator.mediaDevices && navigator.mediaDevices.getUserMedia ? "있음" : "없음"));
+  out.push("브라우저: " + navigator.userAgent.replace(/^Mozilla\/5\.0 /, "").slice(0, 120));
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    try {
+      const st = await navigator.mediaDevices.getUserMedia({ video: true }); const t = st.getVideoTracks()[0];
+      const set = t.getSettings ? t.getSettings() : {}; out.push(`카메라 켜기: 성공 (${t.label || "이름 없음"}, ${set.width || "?"}×${set.height || "?"})`);
+      st.getTracks().forEach(x => x.stop());
+      const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
+      out.push(`찾은 카메라 ${devs.length}개: ` + devs.map((d, i) => d.label || ("카메라 " + (i + 1))).join(", "));
+    } catch (e) { out.push("카메라 켜기: 실패 — " + camErrorText(e)); }
+  }
+  $("camDiag").innerHTML = out.map(x => x.replace(/&/g, "&amp;").replace(/</g, "&lt;")).join("<br>");
+}
 function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
 async function listCameras() {
   const sel = $("cameraId"); const cur = S.cameraId;
@@ -795,7 +821,7 @@ async function listCameras() {
     sel.innerHTML = '<option value="">전면 카메라</option><option value="__back">후면 카메라</option>';
     devs.forEach((d, i) => { const o = document.createElement("option"); o.value = d.deviceId; o.textContent = (d.label || ("카메라 " + (i + 1))) + " (목록)"; sel.appendChild(o); });
     sel.value = cur;
-  } catch (e) { $("aPrinterInfo").textContent += " · 카메라 목록을 가져오지 못했어요"; }
+  } catch (e) { $("camDiag").textContent = "카메라 목록을 가져오지 못했어요: " + camErrorText(e); }
 }
 // 사진 영역 비율 (회전 반영)
 function photoAspect() {
@@ -1050,7 +1076,7 @@ async function startSession() {
   if (screen !== "idle") return;
   retakesLeft = +S.retakes; tone = 0;
   try { await startCamera(); }
-  catch (e) { overlay("카메라를 켤 수 없어요", "카메라 권한을 허용했는지 확인해 주세요.", [["닫기", () => { overlay(); show("idle"); }]]); return; }
+  catch (e) { overlay("카메라를 켤 수 없어요", camErrorText(e), [["닫기", () => { overlay(); show("idle"); }]]); return; }
   show("cam"); runCountdown();
 }
 // 카메라 쪽을 가리키는 안내 위치
@@ -1274,6 +1300,7 @@ $("adminClose").onclick = () => { stopLive(); readAdmin(); $("admin").classList.
 $("aConnect").onclick = connectPrinter;
 $("aDisconnect").onclick = async () => { if (client) try { await client.disconnect(); } catch (e) {} printerReady = false; setPrinterUI(); };
 $("aRefreshCams").onclick = listCameras;
+$("aCamTest").onclick = camDiagnose;
 $("aResetTone").onclick = () => { Object.assign(S, modeDefaults(S.printMode)); S.profiles[S.printMode] = modeDefaults(S.printMode); saveSettings(); fillAdmin(); renderAdminPreview(); };
 $("aResetCount").onclick = () => { S.printCount = 0; saveSettings(); fillAdmin(); };
 $("aFactory").onclick = () => { if (confirm("모든 설정을 처음 상태로 되돌릴까요?")) { S = Object.assign({}, DEFAULTS, modeDefaults(DEFAULTS.printMode)); S.profiles = { mono: modeDefaults("mono"), gray: modeDefaults("gray") }; saveSettings(); fillAdmin(); renderAdminPreview(); } };
