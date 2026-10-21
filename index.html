@@ -112,7 +112,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.10.1</div>
+<div id="verTag">v0.10.2</div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button></div>
 
@@ -163,7 +163,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.1</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.2</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -185,7 +185,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.1</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.2</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -1469,7 +1469,7 @@ function runCountdown() {
     const left = total - (performance.now() - t0);
     if (left <= 0) { el.textContent = ""; $("cam").classList.remove("look"); capture(); return; }
     const sec = Math.ceil(left / 1000);
-    if (sec !== shown) { shown = sec; el.textContent = sec; beep(660, 0.08); }
+    if (sec !== shown) { shown = sec; el.textContent = (look > 0 && sec <= 1) ? "" : sec; beep(660, 0.08); } // 안내를 쓸 때는 마지막 "1"을 띄우지 않음
     const lk = look > 0 && left <= look;                     // 0.125초 단위로 "카메라를 보세요" 시작
     if (lk !== $("cam").classList.contains("look")) { $("cam").classList.toggle("look", lk); if (lk) placeLook(); }
     later(tick, Math.min(125, left));
