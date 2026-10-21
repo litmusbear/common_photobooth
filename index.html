@@ -35,7 +35,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .pulse{animation:pulse 1.8s ease-in-out infinite}
 @keyframes pulse{50%{opacity:.45}}
 #verTag{position:fixed;right:16px;bottom:16px;font-size:12px;color:var(--mute);opacity:.7;font-variant-numeric:tabular-nums;pointer-events:none}
-#printerBadge{position:fixed;left:16px;bottom:16px;font-size:14px;color:var(--mute);display:flex;align-items:center;gap:8px}
+#printerBadge{position:fixed;left:16px;bottom:16px;font-size:14px;color:var(--mute);display:flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:calc(100vw - 200px)}
+#printerBadge .sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+.camSel{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:14px;max-width:240px}
+.iconBtn{width:38px;height:38px;border-radius:10px;background:var(--panel);border:1px solid var(--line);color:var(--ink);font-size:20px;line-height:1;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.iconBtn:active{transform:scale(.94)}
+.iconBtn.spin{animation:spin .8s linear infinite}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--danger)}
 .dot.ok{background:var(--ok)}
 
@@ -112,9 +117,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.10.2</div>
+<div id="verTag">v0.10.3</div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
-  <button class="btn small" id="pConnect" style="margin-left:6px">연결</button></div>
+  <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
+  <span class="sep"></span>
+  <select id="cameraId" class="camSel" aria-label="카메라"><option value="">전면 카메라</option><option value="__back">후면 카메라</option></select>
+  <button class="iconBtn" id="aRefreshCams" title="카메라 목록 새로고침" aria-label="카메라 목록 새로고침">↻</button></div>
 
 <!-- 2. 촬영 화면 -->
 <section id="cam" class="screen">
@@ -163,7 +171,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.2</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.3</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -185,7 +193,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.2</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.3</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -287,7 +295,6 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
   <div class="card"><h3>카메라와 진행</h3>
     <div class="grid">
-      <label class="field">카메라 <select id="cameraId"><option value="">전면 카메라</option><option value="__back">후면 카메라</option></select></label>
       <label class="field">미리보기 좌우반전 <select id="mirror"><option value="1">켜기 (거울처럼)</option><option value="0">끄기</option></select></label>
       <label class="field">출력도 좌우반전 <select id="mirrorPrint"><option value="0">끄기</option><option value="1">켜기</option></select></label>
       <label class="field">카메라 위치 (화면 기준) <select id="camPos"><option value="top">위 가운데</option><option value="topleft">위 왼쪽</option><option value="topright">위 오른쪽</option><option value="left">왼쪽 가운데</option><option value="right">오른쪽 가운데</option><option value="bottom">아래 가운데</option></select></label>
@@ -298,9 +305,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <label class="field">확인 화면 자동 종료 (초) <span class="v" id="v_reviewTimeout"></span><input type="range" id="reviewTimeout" min="20" max="180" step="10"></label>
       <label class="field">관리자 PIN (4자리) <input type="password" id="adminPin" inputmode="numeric" maxlength="4"></label>
     </div>
-    <div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn small" id="aRefreshCams">카메라 목록 새로고침</button><button class="btn small" id="aCamTest">카메라 진단</button></div>
+    <div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn small" id="aCamTest">카메라 진단</button></div>
     <p class="note" id="camDiag"></p>
-    <p class="note">외장 카메라(Zf 등)는 연결한 뒤 "카메라 목록 새로고침"을 누르면 목록에 나타나요. 안 보이면 이 브라우저에서는 외장 카메라를 지원하지 않는 거라 내장 카메라를 써야 해요.</p>
+    <p class="note">카메라 선택은 첫 화면 왼쪽 아래에 있어요. 외장 카메라(Zf 등)는 연결한 뒤 옆의 ↻ 버튼을 누르면 목록에 나타나요.</p>
   </div>
 
   <div class="card"><h3>기록</h3>
@@ -1038,15 +1045,18 @@ async function camDiagnose() {
   $("camDiag").innerHTML = out.map(x => x.replace(/&/g, "&amp;").replace(/</g, "&lt;")).join("<br>");
 }
 function stopCamera() { if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; } }
-async function listCameras() {
-  const sel = $("cameraId"); const cur = S.cameraId;
+async function listCameras(askPermission = true) {
+  const sel = $("cameraId"); const cur = S.cameraId, btn = $("aRefreshCams");
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+  btn.classList.add("spin");
   try {
-    if (!stream) { const s = await navigator.mediaDevices.getUserMedia({ video: true }); s.getTracks().forEach(t => t.stop()); }
+    if (askPermission && !stream) { const s = await navigator.mediaDevices.getUserMedia({ video: true }); s.getTracks().forEach(t => t.stop()); }
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
     sel.innerHTML = '<option value="">전면 카메라</option><option value="__back">후면 카메라</option>';
     devs.forEach((d, i) => { const o = document.createElement("option"); o.value = d.deviceId; o.textContent = (d.label || ("카메라 " + (i + 1))) + " (목록)"; sel.appendChild(o); });
-    sel.value = cur;
+    sel.value = cur; if (sel.value !== cur) sel.value = "";
   } catch (e) { $("camDiag").textContent = "카메라 목록을 가져오지 못했어요: " + camErrorText(e); }
+  finally { btn.classList.remove("spin"); }
 }
 // 사진 영역 비율 (회전 반영)
 function photoAspect() {
@@ -1441,6 +1451,7 @@ async function startSession() {
   retakesLeft = +S.retakes; tone = 0;
   try { await startCamera(); }
   catch (e) { overlay("카메라를 켤 수 없어요", camErrorText(e), [["닫기", () => { overlay(); show("idle"); }]]); return; }
+  listCameras(false); // 권한을 받은 뒤라 카메라 이름까지 채워짐
   enterCam();
 }
 // 촬영 화면: 먼저 미리보기와 프레임을 보여주고, 손님이 "촬영하기"를 누르면 카운트다운
@@ -1695,7 +1706,9 @@ $("admin").addEventListener("change", (e) => { if (e.target.id && FIELDS.include
 $("adminClose").onclick = () => { stopLive(); readAdmin(); $("admin").classList.remove("on"); };
 $("aConnect").onclick = () => connectPrinter();
 $("aDisconnect").onclick = async () => { if (client) try { await client.disconnect(); } catch (e) {} printerReady = false; setPrinterUI(); };
-$("aRefreshCams").onclick = listCameras;
+$("aRefreshCams").onclick = (e) => { e.stopPropagation(); listCameras(true); };
+$("cameraId").addEventListener("click", (e) => e.stopPropagation());
+$("cameraId").addEventListener("change", () => { S.cameraId = $("cameraId").value; saveSettings(); if (liveOn) { stopLive(); startLive(); } });
 $("aStationConnect").onclick = () => { readAdmin(); connectStation(); };
 $("aCamTest").onclick = camDiagnose;
 $("aResetTone").onclick = () => { Object.assign(S, modeDefaults(S.printMode)); S.profiles[S.printMode] = modeDefaults(S.printMode); saveSettings(); fillAdmin(); renderAdminPreview(); };
@@ -1724,6 +1737,7 @@ if (IS_STATION) {
   startStationHost(); stBroadcast(); setInterval(stBroadcast, 5000);
 } else if (viaStation()) connectStation();
 if (!IS_STATION && +S.beautyOn) setTimeout(loadFaceMesh, 1500);
+if (!IS_STATION) { $("cameraId").value = S.cameraId; listCameras(false); }
 if (!IS_STATION) setInterval(() => { if (viaStation()) { const was = $("pDot").classList.contains("ok"); if (was !== printReady()) setStationUI(); } }, 3000);
 // 화면 꺼짐 방지 (지원하는 브라우저만)
 async function keepAwake() { try { if (navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch (e) {} }
