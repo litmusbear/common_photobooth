@@ -231,7 +231,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
   <div class="card"><h3>카메라와 진행</h3>
     <div class="grid">
-      <label class="field">카메라 <select id="cameraId"><option value="">자동 (전면)</option></select></label>
+      <label class="field">카메라 <select id="cameraId"><option value="">전면 카메라</option><option value="__back">후면 카메라</option></select></label>
       <label class="field">미리보기 좌우반전 <select id="mirror"><option value="1">켜기 (거울처럼)</option><option value="0">끄기</option></select></label>
       <label class="field">출력도 좌우반전 <select id="mirrorPrint"><option value="0">끄기</option><option value="1">켜기</option></select></label>
       <label class="field">카메라 위치 (화면 기준) <select id="camPos"><option value="top">위 가운데</option><option value="topleft">위 왼쪽</option><option value="topright">위 오른쪽</option><option value="left">왼쪽 가운데</option><option value="right">오른쪽 가운데</option><option value="bottom">아래 가운데</option></select></label>
@@ -772,7 +772,8 @@ let stream = null;
 async function startCamera(v = $("video")) {
   stopCamera();
   const video = { width: { ideal: 1920 }, height: { ideal: 1440 } };
-  if (S.cameraId) video.deviceId = { exact: S.cameraId }; else video.facingMode = "user";
+  if (S.cameraId === "__back") video.facingMode = { exact: "environment" };
+  else if (S.cameraId) video.deviceId = { exact: S.cameraId }; else video.facingMode = "user";
   try {
     stream = await navigator.mediaDevices.getUserMedia({ video, audio: false });
   } catch (e) {
@@ -791,8 +792,8 @@ async function listCameras() {
   try {
     if (!stream) { const s = await navigator.mediaDevices.getUserMedia({ video: true }); s.getTracks().forEach(t => t.stop()); }
     const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === "videoinput");
-    sel.innerHTML = '<option value="">자동 (전면)</option>';
-    devs.forEach((d, i) => { const o = document.createElement("option"); o.value = d.deviceId; o.textContent = d.label || ("카메라 " + (i + 1)); sel.appendChild(o); });
+    sel.innerHTML = '<option value="">전면 카메라</option><option value="__back">후면 카메라</option>';
+    devs.forEach((d, i) => { const o = document.createElement("option"); o.value = d.deviceId; o.textContent = (d.label || ("카메라 " + (i + 1))) + " (목록)"; sel.appendChild(o); });
     sel.value = cur;
   } catch (e) { $("aPrinterInfo").textContent += " · 카메라 목록을 가져오지 못했어요"; }
 }
