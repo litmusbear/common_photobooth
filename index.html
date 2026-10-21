@@ -76,6 +76,25 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 .label{font-size:14px;color:var(--mute);margin:4px 2px -6px}
 
 /* overlay */
+#printAnim{display:none;flex-direction:column;align-items:center}
+#printAnim.on{display:flex}
+#paSlot{width:min(300px,60vw);height:22px;border-radius:11px;background:#2a2622;border:2px solid #4a433c;box-shadow:inset 0 6px 10px rgba(0,0,0,.6);position:relative;z-index:2}
+#paClip{width:min(260px,52vw);overflow:hidden;margin-top:-11px;height:0;transition:height .35s ease-out;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+#paClip canvas{display:block;width:100%;height:auto;background:#fbf8f2}
+#warnBar{position:fixed;top:14px;left:50%;transform:translateX(-50%);display:none;align-items:center;gap:10px;background:#3a2a10;border:1px solid #8a6420;color:#ffd58a;padding:10px 16px;border-radius:14px;font-size:15px;z-index:5;max-width:calc(100vw - 32px)}
+#warnBar.on{display:flex}
+#warnBar.bad{background:#3a1512;border-color:#a33;color:#ffb3aa}
+.dot.warn{background:#ffb347}
+#thermCanvas{position:absolute;display:none;pointer-events:none}
+#cam.therm #thermCanvas{display:block}
+#cam.look #thermCanvas{opacity:0}
+.switch{position:absolute;bottom:46px;right:24px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:#fff;text-shadow:0 2px 10px #000;z-index:4;cursor:pointer}
+.switch input{display:none}
+.switch .track{width:52px;height:30px;border-radius:15px;background:rgba(255,255,255,.25);position:relative;transition:background .2s}
+.switch .track::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s}
+.switch input:checked + .track{background:var(--accent)}
+.switch input:checked + .track::after{left:25px}
+#cam.look .switch{opacity:0}
 #overlay{position:fixed;inset:0;background:rgba(10,9,8,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;z-index:20}
 #overlay.on{display:flex}
 .spinner{width:56px;height:56px;border:6px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
@@ -117,7 +136,8 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
 </section>
-<div id="verTag">v0.10.3</div>
+<div id="verTag">v0.11.0</div>
+<div id="warnBar"><span id="warnText"></span><button class="btn small" id="warnBtn" style="display:none">다시 연결</button></div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
   <span class="sep"></span>
@@ -127,7 +147,9 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 <!-- 2. 촬영 화면 -->
 <section id="cam" class="screen">
   <video id="video" playsinline autoplay muted></video>
+  <canvas id="thermCanvas"></canvas>
   <div id="frameGuide"></div>
+  <label class="switch" id="thermSw"><span>감열지 미리보기</span><input type="checkbox" id="thermPrev"><span class="track"></span></label>
   <div id="camHint">가이드 안에 얼굴을 맞춰 주세요</div>
   <div id="countdown"></div>
   <div id="lookHere"><span class="arrow" id="lookArrow">↑</span><span>카메라를 보세요!</span></div>
@@ -166,12 +188,13 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
   <p class="sub" id="doneCount" style="margin-top:28px;font-size:16px"></p>
 </section>
 
-<div id="overlay"><div class="spinner" id="ovSpin"></div><p class="big" id="ovTitle" style="font-size:32px"></p>
+<div id="overlay"><div class="spinner" id="ovSpin"></div>
+  <div id="printAnim"><div id="paSlot"></div><div id="paClip"><canvas id="paCanvas"></canvas></div></div><p class="big" id="ovTitle" style="font-size:32px"></p>
   <p class="sub" id="ovSub"></p><div class="row" id="ovBtns"></div></div>
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.3</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.11.0</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -193,7 +216,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.10.3</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v0.11.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -216,6 +239,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <button class="btn small" id="aPrintLast">마지막 사진 다시 출력</button>
     </div>
     <p class="note" id="aPrinterInfo">-</p>
+    <p class="note" id="aPrinterStat">배터리·용지: 연결하면 표시돼요</p>
+    <div class="grid" style="margin-top:6px">
+      <label class="field">용지 부족 경고 <span class="v" id="v_lowPaper"></span><input type="range" id="lowPaper" min="0" max="50" step="1"></label>
+      <label class="field">배터리 부족 경고 <span class="v" id="v_lowBattery"></span><input type="range" id="lowBattery" min="0" max="50" step="5"></label>
+      <label class="field">연결 끊기면 자동으로 다시 연결 <select id="autoReconnect"><option value="1">켜기</option><option value="0">끄기</option></select></label>
+    </div>
     <p class="note">회색조는 프린터가 점마다 열 세기를 16단계로 조절해 디더링 없이 매끈하게 찍는 방식이에요(공식 앱의 사진 출력과 같은 방식). 회색조 사진 용지에서만 동작할 수 있어요. 출력이 안 되면 "흑백 점"으로 바꾸세요.</p>
     <div class="grid" style="margin-top:10px">
       <label class="field">회색조: 출력 전 용지 확인 신호(0x59) <select id="grayCalib"><option value="1">보내기 (공식 앱 기록과 같게)</option><option value="0">안 보내기</option></select></label>
@@ -248,6 +277,11 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
       <label class="field">갸름하게 세기 <span class="v" id="v_faceSlim"></span><input type="range" id="faceSlim" min="0" max="1" step="0.05"></label>
       <label class="field">눈 크게 세기 <span class="v" id="v_eyeBig"></span><input type="range" id="eyeBig" min="0" max="1" step="0.05"></label>
     </div>
+    <div class="grid" style="margin-top:10px">
+      <label class="field">얼굴 기준 자동 밝기 <select id="faceExpo"><option value="auto">자동 (내장 카메라일 때만 켜짐)</option><option value="on">항상 켜기</option><option value="off">끄기</option></select></label>
+      <label class="field">얼굴 목표 밝기 <span class="v" id="v_faceTarget"></span><input type="range" id="faceTarget" min="0.4" max="0.85" step="0.01"></label>
+    </div>
+    <p class="note" id="faceExpoInfo"></p>
     <p class="note" id="faceInfo">얼굴 인식: 준비 전</p>
     <p class="note">찍은 사진에서 얼굴을 찾아(여러 명도 가능) 턱선을 살짝 안쪽으로, 눈을 살짝 크게 바꿔요. "강하게"는 위 세기의 100%, "자연스럽게"는 55%로 적용돼요. 얼굴 인식 파일(facemesh 폴더)이 index.html 옆에 있어야 동작해요.</p>
   </div>
@@ -308,6 +342,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
     <div class="row" style="justify-content:flex-start;margin-top:12px"><button class="btn small" id="aCamTest">카메라 진단</button></div>
     <p class="note" id="camDiag"></p>
     <p class="note">카메라 선택은 첫 화면 왼쪽 아래에 있어요. 외장 카메라(Zf 등)는 연결한 뒤 옆의 ↻ 버튼을 누르면 목록에 나타나요.</p>
+  </div>
+
+  <div class="card"><h3>오프라인 저장</h3>
+    <p class="note" id="offlineInfo">확인 중…</p>
+    <p class="note">앱과 얼굴 인식 파일을 이 기기에 저장해 두면, 인터넷이 끊겨도 페이지를 새로 열 수 있어요. 인터넷이 될 때 한 번 열어 두면 자동으로 저장돼요. (index.html 옆에 sw.js 파일이 있어야 해요)</p>
+    <div class="row" style="justify-content:flex-start;margin-top:8px"><button class="btn small" id="aOfflineCheck">저장 상태 확인</button></div>
   </div>
 
   <div class="card"><h3>기록</h3>
@@ -627,6 +667,7 @@ const HEAD_PX_DEFAULT = 567; // B1 Pro
 const DEFAULTS = {
   printVia: "local", stationCode: "",
   beautyOn: 1, beautyDefault: 1, faceSlim: 0.5, eyeBig: 0.5,
+  faceExpo: "auto", faceTarget: 0.62, thermPrev: 0, lowPaper: 15, lowBattery: 20, autoReconnect: 1,
   density: 3, copies: 1, maxCopies: 4,
   stampOn: 1, stampPos: "inside", stampFmt: "film", stampText: "", stampSize: 2.6, autoLen: 1, printMode: "gray", grayChunk: 200, grayCalib: 1,
   labelLen: 67, areaX: 2, areaY: 2, areaW: 44, areaH: 52, rotate: 0,
@@ -665,11 +706,12 @@ function show(id) {
   document.querySelectorAll(".screen").forEach(s => s.classList.toggle("on", s.id === id));
   screen = id;
   $("printerBadge").style.display = (id === "idle") ? "flex" : "none";
+  if (typeof updateWarn === "function") updateWarn();
   $("verTag").style.display = (id === "idle") ? "block" : "none";
 }
 function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
 function overlay(title, sub, buttons, spin) {
-  const o = $("overlay");
+  const o = $("overlay"); $("printAnim").classList.remove("on"); clearInterval(paTimer);
   if (!title) { o.classList.remove("on"); return; }
   $("ovTitle").textContent = title; $("ovSub").textContent = sub || "";
   $("ovSpin").style.display = spin ? "block" : "none";
@@ -682,6 +724,19 @@ function overlay(title, sub, buttons, spin) {
 }
 
 /* ---------------- 프린터 ---------------- */
+/* 인화 중 애니메이션: 실제 출력할 사진이 프린터 입구에서 조금씩 나오는 모습 */
+let paTimer = null, paShown = 0;
+function printAnimStart(label) {
+  const c = $("paCanvas"); c.width = label.width; c.height = label.height; c.getContext("2d").drawImage(label, 0, 0);
+  $("ovSpin").style.display = "none"; $("printAnim").classList.add("on"); paShown = 0; printAnimSet(0.04);
+  clearInterval(paTimer); paTimer = setInterval(() => printAnimSet(Math.min(paShown + 0.012, 0.5)), 200); // 진행률이 안 와도 조금씩
+}
+function printAnimSet(p) {
+  paShown = Math.max(paShown, Math.min(1, p));
+  const full = $("paClip").offsetWidth * ($("paCanvas").height / ($("paCanvas").width || 1));
+  $("paClip").style.height = Math.round(full * paShown) + "px";
+}
+function printAnimDone() { clearInterval(paTimer); printAnimSet(1); }
 let client = null, printerReady = false, printing = false;
 /* 용지 칩에서 읽은 크기. 한 장 길이(간격 제외)에 맞춰 이미지를 만들어야 다음 라벨로 넘어가지 않음 */
 let paper = null;
@@ -720,6 +775,69 @@ function setPrinterUI() {
   }
   if (!navigator.bluetooth) info += viaStation() ? " · 이 기기는 출력 담당을 통해 출력해요" : " · 이 브라우저는 블루투스를 쓸 수 없어요 (출력 경로를 \"출력 담당 기기로 보내기\"로 바꾸거나 Bluefy에서 여세요)";
   $("aPrinterInfo").textContent = info;
+  updateWarn();
+}
+/* 프린터 상태 (배터리, 용지 남은 양, 덮개/용지) + 끊김 감지·자동 재연결 */
+let pStat = {}, lastBtDevice = null, userDisconnect = false, reconnTimer = null, reconnTries = 0;
+function batteryPct(v) { if (v == null) return null; return v <= 4 ? v * 25 : Math.min(100, v); } // 일부 기종은 0~4 단계로 알려줌
+function paperLeft() {
+  const r = client && client.getRfidInfo && client.getRfidInfo(), l = r && r.labelRfidInfo;
+  if (!l || !l.tagPresent) return null;
+  const cap = l.capacity || l.allPaper; if (!cap) return null;
+  return Math.max(0, cap - (l.usedPaper || 0));
+}
+function printerStatus() { // 이 기기 또는 출력 담당에서 받은 상태
+  if (viaStation()) return stState ? { bat: stState.battery, paper: stState.paperLeft, lid: stState.lid, paperIn: stState.paperIn } : {};
+  if (!printerReady) return {};
+  return { bat: batteryPct(pStat.batteryPercents), paper: paperLeft(), lid: pStat.lidClosed, paperIn: pStat.paperInserted };
+}
+function updateWarn() {
+  const bar = $("warnBar"); if (!bar || IS_STATION) return;
+  const ok = printReady(), st = printerStatus(), msgs = []; let bad = false, btn = false;
+  if (!ok && (lastBtDevice || viaStation())) { msgs.push(viaStation() ? "출력 담당과 연결이 끊겼어요" : (reconnTimer ? "프린터 연결이 끊겨서 다시 연결하는 중…" : "프린터 연결이 끊겼어요")); bad = true; btn = !viaStation(); }
+  if (ok) {
+    if (st.lid === false) { msgs.push("프린터 덮개가 열려 있어요"); bad = true; }
+    if (st.paperIn === false) { msgs.push("용지가 없어요"); bad = true; }
+    if (st.paper != null && st.paper <= +S.lowPaper) { msgs.push(`용지가 약 ${st.paper}장 남았어요`); if (st.paper <= 3) bad = true; }
+    if (st.bat != null && st.bat <= +S.lowBattery) { msgs.push(`프린터 배터리 ${st.bat}%`); if (st.bat <= 10) bad = true; }
+  }
+  bar.classList.toggle("on", msgs.length > 0 && screen === "idle"); bar.classList.toggle("bad", bad);
+  $("warnText").textContent = "⚠ " + msgs.join(" · "); $("warnBtn").style.display = btn ? "inline-block" : "none";
+  $("pDot").classList.toggle("warn", ok && msgs.length > 0);
+  const extra = []; if (st.bat != null) extra.push(`배터리 ${st.bat}%`); if (st.paper != null) extra.push(`용지 약 ${st.paper}장`);
+  const base = $("pText").textContent.split(" · ")[0]; $("pText").textContent = ok && extra.length ? base + " · " + extra.join(" · ") : base;
+  const as = $("aPrinterStat"); if (as) as.textContent = ok ? `배터리 ${st.bat != null ? st.bat + "%" : "알 수 없음"} · 용지 ${st.paper != null ? "약 " + st.paper + "장 남음 (용지 칩 기준)" : "남은 양 알 수 없음"}${st.lid === false ? " · 덮개 열림" : ""}${st.paperIn === false ? " · 용지 없음" : ""}` : "배터리·용지: 연결하면 표시돼요";
+}
+function scheduleReconnect() {
+  clearTimeout(reconnTimer); reconnTimer = null;
+  if (userDisconnect || !lastBtDevice || !+S.autoReconnect || printerReady || reconnTries >= 30) { updateWarn(); return; }
+  reconnTimer = setTimeout(async () => {
+    reconnTries++;
+    try { await openPrinter(lastBtDevice, true); } catch (e) {}
+    reconnTimer = null;
+    if (!printerReady) scheduleReconnect(); else { reconnTries = 0; setPrinterUI(); }
+  }, reconnTries < 3 ? 3000 : 8000);
+  updateWarn();
+}
+// 장치 하나에 연결 (버튼으로 고른 기기, 또는 끊긴 뒤 같은 기기로 자동 재연결)
+async function openPrinter(device, quiet) {
+  if (client) { try { if (client.removeAllListeners) client.removeAllListeners(); await client.disconnect(); } catch (e) {} }
+  printerReady = false;
+  client = window.__clientFactory ? window.__clientFactory() : NB.instantiateClient("bluetooth"); // (__clientFactory: 테스트용)
+  client.on("disconnect", () => { printerReady = false; setPrinterUI(); if (!userDisconnect) scheduleReconnect(); });
+  client.on("rfidinfofetched", (e) => { if (e.info && e.info.paperInfo) setPaper(e.info.paperInfo); updateWarn(); });
+  client.on("heartbeat", (e) => { pStat = Object.assign({}, pStat, e.data || {}); updateWarn(); if (IS_STATION) stBroadcast(); });
+  if (device) await client.connect({ authorizedDevice: device }); else await client.connect();
+  printerReady = true; userDisconnect = false; reconnTries = 0;
+  try { pStat = Object.assign({}, (client.getHeartbeatData && client.getHeartbeatData()) || {}); } catch (e) {}
+  try { const bp = client.getPrinterInfo && client.getPrinterInfo().batteryPercents; if (bp != null && pStat.batteryPercents == null) pStat.batteryPercents = bp; } catch (e) {}
+  try {
+    let pi = client.getRfidInfo && client.getRfidInfo() && client.getRfidInfo().paperInfo;
+    if (!pi || !pi.valid) pi = await client.protocol.getPaperInfo();
+    setPaper(pi);
+  } catch (e) { setPaper(null); }
+  setPrinterUI();
+  return true;
 }
 async function connectPrinter(findAll = true) { // 기본: 주변 블루투스 기기 전부 보여주기
   if (!navigator.bluetooth) {
@@ -727,24 +845,15 @@ async function connectPrinter(findAll = true) { // 기본: 주변 블루투스 �
     return false;
   }
   try {
-    if (client) { try { await client.disconnect(); } catch (e) {} }
-    client = NB.instantiateClient("bluetooth");
-    client.on("disconnect", () => { printerReady = false; setPrinterUI(); });
-    client.on("rfidinfofetched", (e) => { if (e.info && e.info.paperInfo) setPaper(e.info.paperInfo); });
+    clearTimeout(reconnTimer); reconnTimer = null; userDisconnect = false;
     if (findAll) {
       // 이름/서비스 필터 없이 주변 블루투스 기기를 전부 보여줌 (일부 브라우저는 기본 필터로 프린터를 못 찾음)
-      const services = (client.getServiceUuidFilter && client.getServiceUuidFilter()) || ["e7810a71-73ae-499d-8c15-faa9aef0c3f2"];
-      const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: services });
-      await client.connect({ authorizedDevice: device });
+      const device = await navigator.bluetooth.requestDevice({ acceptAllDevices: true, optionalServices: ["e7810a71-73ae-499d-8c15-faa9aef0c3f2"] });
+      lastBtDevice = device;
+      await openPrinter(device);
     } else {
-      await client.connect();
+      await openPrinter(null);
     }
-    printerReady = true;
-    try { // 연결할 때 라이브러리가 읽어 둔 용지 정보, 없으면 직접 요청
-      let pi = client.getRfidInfo && client.getRfidInfo() && client.getRfidInfo().paperInfo;
-      if (!pi || !pi.valid) pi = await client.protocol.getPaperInfo();
-      setPaper(pi);
-    } catch (e) { setPaper(null); }
   } catch (e) {
     printerReady = false;
     overlay("프린터에 연결하지 못했어요", "목록에서 B1으로 시작하는 기기를 골라 주세요. " +
@@ -952,7 +1061,8 @@ let stHost = null, stConns = new Set(), stQueue = [], stBusy = false, stCount = 
 function stLog(t) { const el = $("stLog"); if (!el) return; const d = new Date(); el.textContent = `${d.toLocaleTimeString()}  ${t}\n` + el.textContent.slice(0, 4000); }
 function stStatus() {
   const m = client && printerReady && client.getModelMetadata ? client.getModelMetadata() : null;
-  return { t: "status", printer: printerReady, model: m ? m.model : "", head: m ? m.printheadPixels : 0, paper: paper || null, busy: stBusy, queue: stQueue.length };
+  return { t: "status", printer: printerReady, model: m ? m.model : "", head: m ? m.printheadPixels : 0, paper: paper || null, busy: stBusy, queue: stQueue.length,
+    battery: printerReady ? batteryPct(pStat.batteryPercents) : null, paperLeft: printerReady ? paperLeft() : null, lid: pStat.lidClosed, paperIn: pStat.paperInserted };
 }
 function stBroadcast() {
   if (!IS_STATION) return;
@@ -1082,6 +1192,27 @@ function layoutGuide() {
   Object.assign(v.style, { inset: "auto", right: "auto", bottom: "auto", objectFit: "fill",
     left: (gx - c.x * sc) + "px", top: (gy - c.y * sc) + "px", width: vw * sc + "px", height: vh * sc + "px" });
   Object.assign($("frameGuide").style, { left: gx + "px", top: gy + "px", width: gw + "px", height: gh + "px" });
+  Object.assign($("thermCanvas").style, { left: gx + "px", top: gy + "px", width: gw + "px", height: gh + "px", transform: S.mirror ? "scaleX(-1)" : "none" });
+}
+// 촬영 화면 감열지 미리보기: 카메라 화면을 실제 출력처럼 보정해서 프레임 위에 겹쳐 그림
+let thermRun = 0;
+function setTherm(on) {
+  S.thermPrev = on ? 1 : 0; saveSettings(); $("thermPrev").checked = !!on;
+  $("cam").classList.toggle("therm", !!on);
+  const id = ++thermRun; if (on) thermLoop(id);
+}
+function thermLoop(id) {
+  if (id !== thermRun || !+S.thermPrev) return;
+  const v = $("video");
+  if (screen === "cam" && v.videoWidth && !$("cam").classList.contains("look")) {
+    const f = grabFrame(v), r = (+S.rotate) % 180 !== 0;
+    const pw = Math.round((r ? S.areaH : S.areaW) * MM * 0.6), ph = Math.round((r ? S.areaW : S.areaH) * MM * 0.6);
+    const o = toneOpts(); o.softSkin = 0; // 미리보기는 가볍게
+    const p = processPhoto(f, pw, ph, 0, o), c = $("thermCanvas");
+    if (c.width !== pw || c.height !== ph) { c.width = pw; c.height = ph; }
+    c.getContext("2d").drawImage(p, 0, 0);
+  }
+  if (screen === "cam") setTimeout(() => requestAnimationFrame(() => thermLoop(id)), 120);
 }
 addEventListener("resize", layoutGuide);
 function grabFrame(v = $("video")) {
@@ -1116,11 +1247,10 @@ function processPhoto(srcCanvas, outW, outH, tone, opt) {
   // 1) 크기 맞추기 + 회색조
   const c = document.createElement("canvas"); c.width = outW; c.height = outH;
   const ctx = c.getContext("2d"); ctx.imageSmoothingQuality = "high";
-  { // 원본 비율은 그대로 두고, 인쇄 영역 비율에 맞게 가운데를 잘라냄 (늘리거나 찌그러뜨리지 않음)
-    const sw = srcCanvas.width, sh = srcCanvas.height, ta = outW / outH;
-    let cw = sw, ch = sw / ta; if (ch > sh) { ch = sh; cw = sh * ta; }
-    ctx.drawImage(srcCanvas, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, outW, outH);
-  }
+  const sw = srcCanvas.width, sh = srcCanvas.height, ta = outW / outH; // 원본 비율은 그대로, 가운데를 잘라냄
+  let cw = sw, ch = sw / ta; if (ch > sh) { ch = sh; cw = sh * ta; }
+  const sx = (sw - cw) / 2, sy = (sh - ch) / 2;
+  ctx.drawImage(srcCanvas, sx, sy, cw, ch, 0, 0, outW, outH);
   const id = ctx.getImageData(0, 0, outW, outH), d = id.data, n = outW * outH;
   let g = new Float32Array(n);
   for (let i = 0; i < n; i++) g[i] = (0.299 * d[i * 4] + 0.587 * d[i * 4 + 1] + 0.114 * d[i * 4 + 2]) / 255;
@@ -1147,6 +1277,20 @@ function processPhoto(srcCanvas, outW, outH, tone, opt) {
     acc = 0; for (let i = 255; i >= 0; i--) { acc += hist[i]; if (acc > cut) { hi = i; break; } }
     const L = lo / 255, R = Math.max(L + 0.1, hi / 255);
     for (let i = 0; i < n; i++) g[i] = (g[i] - L) / (R - L);
+  }
+  // 2-1) 얼굴 기준 밝기: 얼굴 가운데의 평균 밝기를 목표값으로 (배경이 밝거나 어두워도 얼굴은 일정하게)
+  if (opt.faces && opt.faces.length) {
+    let sum = 0, cnt = 0;
+    for (const f of opt.faces) {
+      const X0 = Math.max(0, Math.floor((f.x0 * sw - sx) / cw * outW)), X1 = Math.min(outW - 1, Math.ceil((f.x1 * sw - sx) / cw * outW));
+      const Y0 = Math.max(0, Math.floor((f.y0 * sh - sy) / ch * outH)), Y1 = Math.min(outH - 1, Math.ceil((f.y1 * sh - sy) / ch * outH));
+      for (let y = Y0; y <= Y1; y++) for (let x = X0; x <= X1; x++) { sum += Math.min(1, Math.max(0, g[y * outW + x])); cnt++; }
+    }
+    if (cnt > 50) {
+      const m = Math.min(0.97, Math.max(0.03, sum / cnt)), tgt = Math.min(0.9, Math.max(0.3, opt.faceTarget || 0.62));
+      const gam = Math.min(2.2, Math.max(0.45, Math.log(tgt) / Math.log(m)));
+      for (let i = 0; i < n; i++) g[i] = Math.pow(Math.min(1, Math.max(0, g[i])), gam);
+    }
   }
   // 3) 디테일(국소 대비) — 큰 반경 언샤프
   if (opt.detail > 0) {
@@ -1419,9 +1563,18 @@ function beautify(src, faces, level) {
 }
 // 찍은 사진 + 얼굴 정보 + 단계별 결과 캐시
 let shotFaces = null, shotFacesFor = null, warpCache = {}, beautyLevel = 1, facesPending = false;
+// 지금 카메라가 내장 카메라인지 (외장 카메라 = 노출을 직접 맞추는 카메라라서 얼굴 기준 밝기는 끔)
+function isBuiltinCam() {
+  if (!S.cameraId || S.cameraId === "__back") return true;
+  const sel = $("cameraId"), o = sel && [...sel.options].find(x => x.value === S.cameraId);
+  return !!(o && /전면|후면|front|back|facetime|built.?in|내장|wide|desk view/i.test(o.textContent));
+}
+function faceExpoActive() { return S.faceExpo === "on" || (S.faceExpo === "auto" && isBuiltinCam()); }
+function setFaceExpoInfo() { const el = $("faceExpoInfo"); if (el) el.textContent = `얼굴 기준 자동 밝기: 지금 ${faceExpoActive() ? "켜짐" : "꺼짐"}${S.faceExpo === "auto" ? (isBuiltinCam() ? " (내장 카메라)" : " (외장 카메라라 꺼짐)") : ""}`; }
+function needFaces() { return +S.beautyOn || faceExpoActive(); }
 function analyzeShot(shot) {
   shotFaces = null; shotFacesFor = shot; warpCache = {};
-  if (!+S.beautyOn || !shot) { facesPending = false; return; }
+  if (!needFaces() || !shot) { facesPending = false; return; }
   facesPending = true; updateBeautyUI();
   detectFaces(shot).then((f) => {
     if (shotFacesFor !== shot) return;
@@ -1432,6 +1585,14 @@ function analyzeShot(shot) {
     if ($("admin").classList.contains("on")) renderAdminPreview();
   });
 }
+// 얼굴 기준 밝기에 쓸 얼굴 영역 (사진 기준 0~1 좌표)
+function faceBoxes(shot) {
+  if (!faceExpoActive() || !shot || shot !== shotFacesFor || !shotFaces || !shotFaces.length) return null;
+  return shotFaces.map(L => { let x0 = 1, y0 = 1, x1 = 0, y1 = 0; L.forEach(p => { x0 = Math.min(x0, p.x); y0 = Math.min(y0, p.y); x1 = Math.max(x1, p.x); y1 = Math.max(y1, p.y); });
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, hw = (x1 - x0) * 0.3, hh = (y1 - y0) * 0.3; // 가운데 60%만 (머리카락·배경 제외)
+    return { x0: cx - hw, y0: cy - hh, x1: cx + hw, y1: cy + hh }; });
+}
+function toneOptsFor(shot) { const o = toneOpts(); o.faces = faceBoxes(shot); o.faceTarget = +S.faceTarget; return o; }
 function shotFor(shot, level) {
   if (!shot || !+S.beautyOn || shot !== shotFacesFor || !shotFaces || !shotFaces.length || !level) return shot;
   return warpCache[level] || (warpCache[level] = beautify(shot, shotFaces, level));
@@ -1456,7 +1617,7 @@ async function startSession() {
 }
 // 촬영 화면: 먼저 미리보기와 프레임을 보여주고, 손님이 "촬영하기"를 누르면 카운트다운
 function enterCam() {
-  show("cam"); layoutGuide();
+  show("cam"); layoutGuide(); setTherm(+S.thermPrev);
   if (!+S.camReady) { $("cam").classList.remove("ready"); $("camHint").textContent = "곧 찍혀요!"; runCountdown(); return; }
   $("cam").classList.add("ready"); $("cam").classList.remove("look"); $("countdown").textContent = "";
   $("camHint").textContent = "프레임 안에 얼굴을 맞추고, 준비되면 촬영하기를 눌러 주세요";
@@ -1515,7 +1676,7 @@ function showReview() {
   later(() => { if (screen === "review" && !printing) goIdle(); }, S.reviewTimeout * 1000);
 }
 function renderPreview() {
-  lastLabel = buildLabel(shotFor(lastShot, beautyLevel), tone, toneOpts());
+  lastLabel = buildLabel(shotFor(lastShot, beautyLevel), tone, toneOptsFor(lastShot));
   const p = $("preview"); p.width = lastLabel.width; p.height = lastLabel.height;
   p.getContext("2d").drawImage(lastLabel, 0, 0);
 }
@@ -1533,10 +1694,11 @@ async function doPrint() {
     return;
   }
   printing = true; timers.forEach(clearTimeout); timers = [];
-  overlay("출력 중…", "잠시만 기다려 주세요", [], true);
+  overlay("인화 중…", "잠시만 기다려 주세요", [], false); printAnimStart(lastLabel);
   try {
     const n = selCopies;
-    await printLabel(lastLabel, n, p => { $("ovSub").textContent = p < 1 ? `사진 보내는 중 ${Math.round(p * 100)}%` : "인쇄 마무리 중…"; });
+    await printLabel(lastLabel, n, p => { $("ovSub").textContent = p < 1 ? `사진 보내는 중 ${Math.round(p * 100)}%` : "인쇄 마무리 중…"; printAnimSet(0.05 + p * 0.8); });
+    printAnimDone(); await sleep(700);
     S.printCount += n; saveSettings();
     overlay(); show("done"); $("doneCount").textContent = n > 1 ? `${n}장 나왔어요. 한 장씩 나눠 가지세요!` : "";
     later(goIdle, 6000 + (n - 1) * 1500);
@@ -1564,6 +1726,7 @@ function beep(freq, dur) {
 $("idle").addEventListener("click", startSession);
 $("pConnect").addEventListener("click", (e) => { e.stopPropagation(); ensurePrinter(); });
 $("camCancel").onclick = goIdle;
+$("thermPrev").addEventListener("change", () => setTherm($("thermPrev").checked));
 $("shoot").onclick = () => {
   if (screen !== "cam" || !$("cam").classList.contains("ready")) return;
   timers.forEach(clearTimeout); timers = [];
@@ -1622,15 +1785,16 @@ document.addEventListener("keydown", (e) => {
 });
 if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 
-const FIELDS = ["grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
-const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode"].includes(f)));
+const FIELDS = ["faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
+const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode","faceExpo"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
-  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
+  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", faceTarget: v => Math.round(v * 100) + "%", lowPaper: v => v + "장 이하", lowBattery: v => v + "% 이하", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
 function fillAdmin() {
   FIELDS.forEach(f => { const el = $(f); if (el && el !== document.activeElement) el.value = S[f]; });
   Object.keys(VIEW).forEach(f => { const v = $("v_" + f.replace("Sec", "")) || $("v_" + f); if (v) v.textContent = VIEW[f](S[f]); });
   $("statLine").textContent = `지금까지 출력: ${S.printCount}장`;
   $("stationUrl").textContent = location.origin + location.pathname + "?station"; setStationUI();
+  setFaceExpoInfo(); updateWarn(); offlineStatus();
   setPaper(paper);
   setPrinterUI();
 }
@@ -1647,7 +1811,7 @@ function readAdmin() {
   if (S.printVia !== prevVia || S.stationCode !== prevCode) { if (viaStation()) connectStation(); else { if (stConn) try { stConn.close(); } catch (e) {} stConn = null; stState = null; setStationUI(); } }
   warpCache = {};
   saveSettings(); fillAdmin(); renderAdminPreview();
-  if (+S.beautyOn && !fmLoading && !IS_STATION) loadFaceMesh();
+  if (needFaces() && !fmLoading && !IS_STATION) loadFaceMesh();
   if (liveOn && liveCam !== S.cameraId) { stopLive(); startLive(); } // 카메라를 바꾸면 다시 켜기
   if (liveOn) $("liveVideo").style.transform = S.mirror ? "scaleX(-1)" : "none";
 }
@@ -1665,7 +1829,7 @@ function sampleImage() { // 사진이 없을 때 쓰는 그라데이션 + 원 �
 }
 function renderAdminPreview() {
   if (liveOn) return; // 실시간 보기 중에는 루프가 그림
-  const lab = buildLabel(lastShot ? shotFor(lastShot, +S.beautyDefault) : sampleImage(), 0, toneOpts());
+  const lab = buildLabel(lastShot ? shotFor(lastShot, +S.beautyDefault) : sampleImage(), 0, lastShot ? toneOptsFor(lastShot) : toneOpts());
   const p = $("adminPreview"); p.width = lab.width; p.height = lab.height; p.getContext("2d").drawImage(lab, 0, 0);
 }
 /* 관리자 실시간 보기 */
@@ -1705,10 +1869,12 @@ $("admin").addEventListener("input", (e) => { if (e.target.id && FIELDS.includes
 $("admin").addEventListener("change", (e) => { if (e.target.id && FIELDS.includes(e.target.id)) readAdmin(); });
 $("adminClose").onclick = () => { stopLive(); readAdmin(); $("admin").classList.remove("on"); };
 $("aConnect").onclick = () => connectPrinter();
-$("aDisconnect").onclick = async () => { if (client) try { await client.disconnect(); } catch (e) {} printerReady = false; setPrinterUI(); };
+$("aDisconnect").onclick = async () => { userDisconnect = true; clearTimeout(reconnTimer); reconnTimer = null; if (client) try { await client.disconnect(); } catch (e) {} printerReady = false; setPrinterUI(); };
+$("warnBtn").onclick = async (e) => { e.stopPropagation(); if (lastBtDevice) { reconnTries = 0; try { await openPrinter(lastBtDevice); } catch (er) { await connectPrinter(); } } else await connectPrinter(); };
+$("aOfflineCheck").onclick = offlineStatus;
 $("aRefreshCams").onclick = (e) => { e.stopPropagation(); listCameras(true); };
 $("cameraId").addEventListener("click", (e) => e.stopPropagation());
-$("cameraId").addEventListener("change", () => { S.cameraId = $("cameraId").value; saveSettings(); if (liveOn) { stopLive(); startLive(); } });
+$("cameraId").addEventListener("change", () => { S.cameraId = $("cameraId").value; saveSettings(); setFaceExpoInfo(); if (liveOn) { stopLive(); startLive(); } });
 $("aStationConnect").onclick = () => { readAdmin(); connectStation(); };
 $("aCamTest").onclick = camDiagnose;
 $("aResetTone").onclick = () => { Object.assign(S, modeDefaults(S.printMode)); S.profiles[S.printMode] = modeDefaults(S.printMode); saveSettings(); fillAdmin(); renderAdminPreview(); };
@@ -1723,6 +1889,22 @@ async function adminPrint(canvas) {
 $("aTest").onclick = () => { readAdmin(); adminPrint(buildLabel(null, 0, toneOpts(), true)); };
 $("aPrintLast").onclick = () => { readAdmin(); adminPrint(buildLabel(lastShot || sampleImage(), 0, toneOpts())); };
 
+/* ---------------- 오프라인 저장 (서비스 워커 sw.js) ---------------- */
+async function offlineStatus() {
+  const el = $("offlineInfo"); if (!el) return;
+  if (!("serviceWorker" in navigator) || !window.caches) { el.textContent = "이 브라우저는 오프라인 저장을 지원하지 않아요. 인터넷이 될 때 열어 둔 화면을 닫지 않고 쓰면 돼요."; return; }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const names = await caches.keys(), mine = names.filter(n => n.startsWith("booth-"));
+    let files = 0; for (const n of mine) files += (await (await caches.open(n)).keys()).length;
+    const cur = mine.includes("booth-v0.11.0");
+    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v0.11.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
+  } catch (e) { el.textContent = "확인하지 못했어요: " + (e.message || e); }
+}
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  navigator.serviceWorker.register("sw.js").then(() => setTimeout(offlineStatus, 3000)).catch(() => { const el = $("offlineInfo"); if (el) el.textContent = "오프라인 저장을 시작하지 못했어요 (sw.js 파일이 없거나 이 브라우저가 지원하지 않음)"; });
+} else setTimeout(offlineStatus, 500);
+
 /* ---------------- 시작 ---------------- */
 setPrinterUI();
 if (IS_STATION) {
@@ -1736,7 +1918,7 @@ if (IS_STATION) {
   $("stNewCode").onclick = () => { try { localStorage.setItem("booth.stationCode", randCode()); } catch (e) {} startStationHost(); };
   startStationHost(); stBroadcast(); setInterval(stBroadcast, 5000);
 } else if (viaStation()) connectStation();
-if (!IS_STATION && +S.beautyOn) setTimeout(loadFaceMesh, 1500);
+if (!IS_STATION && needFaces()) setTimeout(loadFaceMesh, 1500);
 if (!IS_STATION) { $("cameraId").value = S.cameraId; listCameras(false); }
 if (!IS_STATION) setInterval(() => { if (viaStation()) { const was = $("pDot").classList.contains("ok"); if (was !== printReady()) setStationUI(); } }, 3000);
 // 화면 꺼짐 방지 (지원하는 브라우저만)
