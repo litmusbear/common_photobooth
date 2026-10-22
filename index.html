@@ -107,11 +107,17 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 #cam.look .switch{opacity:0}
 #tearGuide{margin:18px 0 6px}
 #tearGuide svg{width:min(320px,70vw);height:auto;overflow:visible}
-.tearPaper{transform-origin:70px 60px;animation:tearRot 2.6s ease-in-out infinite}
-@keyframes tearRot{0%,25%{transform:rotate(0)}65%,85%{transform:rotate(22deg)}100%{transform:rotate(0)}}
-.tearArrow{animation:tearBlink 2.6s ease-in-out infinite}
-.tearFinger{transform-origin:70px 60px;animation:tearRot 2.6s ease-in-out infinite}
-@keyframes tearBlink{0%,20%{opacity:.25}40%,85%{opacity:1}100%{opacity:.25}}
+.tearPaper,.tearFinger{transform-origin:70px 60px;animation:tearRot 3.2s ease-in-out infinite}
+/* 잠깐 멈춤 → 아래로 당기면서 시계 방향으로 돌림 → 뜯겨서 떨어짐 → 다시 */
+@keyframes tearRot{
+  0%,18%{transform:translateY(0) rotate(0);opacity:1}
+  55%{transform:translateY(10px) rotate(20deg);opacity:1}
+  68%{transform:translateY(16px) rotate(24deg);opacity:1}
+  82%{transform:translateY(70px) rotate(26deg);opacity:0}
+  83%{transform:translateY(0) rotate(0);opacity:0}
+  100%{transform:translateY(0) rotate(0);opacity:1}}
+.tearArrow{animation:tearBlink 3.2s ease-in-out infinite}
+@keyframes tearBlink{0%,15%{opacity:.25}30%,68%{opacity:1}82%,100%{opacity:.25}}
 #done{cursor:pointer}
 #overlay{position:fixed;inset:0;background:rgba(10,9,8,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;z-index:20}
 #overlay.on{display:flex}
@@ -158,7 +164,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
   <div id="idleCopy"><p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p></div>
 </section>
-<div id="verTag">v1.2.0</div>
+<div id="verTag">v1.2.1</div>
 <div id="warnBar"><span id="warnText"></span><button class="btn small" id="warnBtn" style="display:none">다시 연결</button></div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
@@ -210,7 +216,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
   <p class="big">출력 완료!</p>
   <div id="tearGuide">
     <svg viewBox="0 0 320 300" width="320" height="300" aria-hidden="true">
-      <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ffb347"/></marker></defs>
+      <defs><marker id="ahw" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#fff"/></marker><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ffb347"/></marker></defs>
       <!-- 프린터 배출구 -->
       <rect x="40" y="40" width="240" height="26" rx="13" fill="#2a2622" stroke="#4a433c" stroke-width="3"/>
       <rect x="54" y="50" width="212" height="6" rx="3" fill="#0d0c0b"/>
@@ -222,8 +228,11 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
       </g>
       <!-- 시계 방향 화살표 (오른쪽) -->
       <path class="tearArrow" d="M262 70 A 90 90 0 0 1 250 190" fill="none" stroke="#ffb347" stroke-width="7" stroke-linecap="round" marker-end="url(#ah)"/>
-      <!-- 손가락 위치 -->
-      <circle class="tearFinger" cx="252" cy="150" r="13" fill="none" stroke="#fff" stroke-width="4"/>
+      <!-- 손가락 위치 + 아래로 당기는 화살표 -->
+      <g class="tearFinger">
+        <circle cx="252" cy="150" r="13" fill="none" stroke="#fff" stroke-width="4"/>
+        <path d="M268 160 L268 204" stroke="#fff" stroke-width="5" stroke-linecap="round" marker-end="url(#ahw)"/>
+      </g>
     </svg>
   </div>
   <p class="sub" id="tearText" style="color:var(--ink);font-weight:700;font-size:clamp(20px,2.8vw,28px);margin-top:4px"></p>
@@ -236,7 +245,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.0</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.1</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -258,7 +267,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.1</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -734,7 +743,7 @@ const HEAD_PX_DEFAULT = 567; // B1 Pro
 /* ---------------- 설정 ---------------- */
 const DEFAULTS = {
   printVia: "local", stationCode: "",
-  idleFit: "cover", idleText: "bottom", tearOn: 1, tearMsg: "사진 오른쪽 끝을 잡고 시계 방향으로 돌리면서 뜯어 주세요", doneSec: 12,
+  idleFit: "cover", idleText: "bottom", tearOn: 1, tearMsg: "사진 오른쪽 끝을 잡고 아래로 당기면서 시계 방향으로 돌려 뜯어 주세요", doneSec: 12,
   beautyOn: 1, beautyDefault: 1, faceSlim: 0.5, eyeBig: 0.5,
   faceExpo: "auto", faceTarget: 0.62, thermPrev: 0, lowPaper: 15, lowBattery: 20, autoReconnect: 1,
   density: 3, copies: 1, maxCopies: 4,
@@ -754,6 +763,7 @@ const MODE_TONE = {
 const PROFILE_KEYS = ["softSkin","skinOnly","autoLevel","contrast","midtone","detail","sharpen","whiteClip","denoise","toneStep","dither","dotScale","screenPx"];
 function modeDefaults(m) { const o = {}; PROFILE_KEYS.forEach(k => o[k] = DEFAULTS[k]); return Object.assign(o, MODE_TONE[m] || {}); }
 let S = loadSettings();
+if (S.tearMsg === "사진 오른쪽 끝을 잡고 시계 방향으로 돌리면서 뜯어 주세요") S.tearMsg = "사진 오른쪽 끝을 잡고 아래로 당기면서 시계 방향으로 돌려 뜯어 주세요";
 if (!S.profiles) { // 처음 실행 (또는 예전 설정): 지금 값은 흑백용으로 보관하고, 회색조는 기본값으로 시작
   S.profiles = { mono: {}, gray: modeDefaults("gray") };
   PROFILE_KEYS.forEach(k => S.profiles.mono[k] = S[k]);
@@ -2029,8 +2039,8 @@ async function offlineStatus() {
     const reg = await navigator.serviceWorker.getRegistration();
     const names = await caches.keys(), mine = names.filter(n => n.startsWith("booth-"));
     let files = 0; for (const n of mine) files += (await (await caches.open(n)).keys()).length;
-    const cur = mine.includes("booth-v1.2.0");
-    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.2.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
+    const cur = mine.includes("booth-v1.2.1");
+    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.2.1) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
   } catch (e) { el.textContent = "확인하지 못했어요: " + (e.message || e); }
 }
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
