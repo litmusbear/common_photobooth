@@ -105,6 +105,14 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 .switch input:checked + .track{background:var(--accent)}
 .switch input:checked + .track::after{left:25px}
 #cam.look .switch{opacity:0}
+#tearGuide{margin:18px 0 6px}
+#tearGuide svg{width:min(320px,70vw);height:auto;overflow:visible}
+.tearPaper{transform-origin:70px 60px;animation:tearRot 2.6s ease-in-out infinite}
+@keyframes tearRot{0%,25%{transform:rotate(0)}65%,85%{transform:rotate(22deg)}100%{transform:rotate(0)}}
+.tearArrow{animation:tearBlink 2.6s ease-in-out infinite}
+.tearFinger{transform-origin:70px 60px;animation:tearRot 2.6s ease-in-out infinite}
+@keyframes tearBlink{0%,20%{opacity:.25}40%,85%{opacity:1}100%{opacity:.25}}
+#done{cursor:pointer}
 #overlay{position:fixed;inset:0;background:rgba(10,9,8,.86);display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px;z-index:20}
 #overlay.on{display:flex}
 .spinner{width:56px;height:56px;border:6px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
@@ -150,7 +158,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
   <div id="idleCopy"><p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p></div>
 </section>
-<div id="verTag">v1.1.0</div>
+<div id="verTag">v1.2.0</div>
 <div id="warnBar"><span id="warnText"></span><button class="btn small" id="warnBtn" style="display:none">다시 연결</button></div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
@@ -200,8 +208,26 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 <!-- 4. 완료 화면 -->
 <section id="done" class="screen">
   <p class="big">출력 완료!</p>
-  <p class="sub">프린터에서 사진을 떼어가세요</p>
-  <p class="sub" id="doneCount" style="margin-top:28px;font-size:16px"></p>
+  <div id="tearGuide">
+    <svg viewBox="0 0 320 300" width="320" height="300" aria-hidden="true">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#ffb347"/></marker></defs>
+      <!-- 프린터 배출구 -->
+      <rect x="40" y="40" width="240" height="26" rx="13" fill="#2a2622" stroke="#4a433c" stroke-width="3"/>
+      <rect x="54" y="50" width="212" height="6" rx="3" fill="#0d0c0b"/>
+      <!-- 나온 사진 (왼쪽 위를 축으로 시계 방향으로 돌아감) -->
+      <g class="tearPaper">
+        <rect x="70" y="53" width="180" height="200" rx="4" fill="#fbf8f2" stroke="#d8d2c6"/>
+        <rect x="84" y="70" width="152" height="140" fill="#9a958d"/>
+        <circle cx="160" cy="125" r="28" fill="#cfcac1"/><rect x="118" y="160" width="84" height="50" rx="20" fill="#cfcac1"/>
+      </g>
+      <!-- 시계 방향 화살표 (오른쪽) -->
+      <path class="tearArrow" d="M262 70 A 90 90 0 0 1 250 190" fill="none" stroke="#ffb347" stroke-width="7" stroke-linecap="round" marker-end="url(#ah)"/>
+      <!-- 손가락 위치 -->
+      <circle class="tearFinger" cx="252" cy="150" r="13" fill="none" stroke="#fff" stroke-width="4"/>
+    </svg>
+  </div>
+  <p class="sub" id="tearText" style="color:var(--ink);font-weight:700;font-size:clamp(20px,2.8vw,28px);margin-top:4px"></p>
+  <p class="sub" id="doneCount" style="margin-top:14px;font-size:16px"></p>
 </section>
 
 <div id="overlay"><div class="spinner" id="ovSpin"></div>
@@ -210,7 +236,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.1.0</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.0</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -232,7 +258,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.1.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -300,6 +326,15 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
     <p class="note" id="faceExpoInfo"></p>
     <p class="note" id="faceInfo">얼굴 인식: 준비 전</p>
     <p class="note">찍은 사진에서 얼굴을 찾아(여러 명도 가능) 턱선을 살짝 안쪽으로, 눈을 살짝 크게 바꿔요. "강하게"는 위 세기의 100%, "자연스럽게"는 55%로 적용돼요. 얼굴 인식 파일(facemesh 폴더)이 index.html 옆에 있어야 동작해요.</p>
+  </div>
+
+  <div class="card"><h3>출력 완료 화면</h3>
+    <div class="grid">
+      <label class="field">뜯는 방법 안내 그림 <select id="tearOn"><option value="1">보이기</option><option value="0">숨기기</option></select></label>
+      <label class="field">안내 문구 <input type="text" id="tearMsg" maxlength="60" style="background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px;font-size:16px"></label>
+      <label class="field">완료 화면 보여주는 시간 <span class="v" id="v_doneSec"></span><input type="range" id="doneSec" min="4" max="30" step="1"></label>
+    </div>
+    <p class="note">화면을 누르면 바로 처음 화면으로 돌아가요. 여러 장 출력하면 장당 1.5초씩 더 보여줘요.</p>
   </div>
 
   <div class="card"><h3>대기 화면 배경</h3>
@@ -699,7 +734,7 @@ const HEAD_PX_DEFAULT = 567; // B1 Pro
 /* ---------------- 설정 ---------------- */
 const DEFAULTS = {
   printVia: "local", stationCode: "",
-  idleFit: "cover", idleText: "bottom",
+  idleFit: "cover", idleText: "bottom", tearOn: 1, tearMsg: "사진 오른쪽 끝을 잡고 시계 방향으로 돌리면서 뜯어 주세요", doneSec: 12,
   beautyOn: 1, beautyDefault: 1, faceSlim: 0.5, eyeBig: 0.5,
   faceExpo: "auto", faceTarget: 0.62, thermPrev: 0, lowPaper: 15, lowBattery: 20, autoReconnect: 1,
   density: 3, copies: 1, maxCopies: 4,
@@ -1739,7 +1774,9 @@ async function doPrint() {
     printAnimDone(); await sleep(700);
     S.printCount += n; saveSettings();
     overlay(); show("done"); $("doneCount").textContent = n > 1 ? `${n}장 나왔어요. 한 장씩 나눠 가지세요!` : "";
-    later(goIdle, 6000 + (n - 1) * 1500);
+    $("tearGuide").style.display = +S.tearOn ? "block" : "none";
+    $("tearText").textContent = +S.tearOn ? (S.tearMsg || "") : "프린터에서 사진을 떼어가세요";
+    later(goIdle, (+S.doneSec || 12) * 1000 + (n - 1) * 1500);
   } catch (e) {
     overlay("출력하지 못했어요", "용지와 프린터 전원을 확인해 주세요. (" + (e.message || e) + ")", [
       ["다시 시도", () => { overlay(); printing = false; doPrint(); }, true],
@@ -1841,10 +1878,10 @@ document.addEventListener("keydown", (e) => {
 });
 if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 
-const FIELDS = ["idleFit","idleText","faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
-const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode","faceExpo","idleFit","idleText"].includes(f)));
+const FIELDS = ["tearOn","tearMsg","doneSec","idleFit","idleText","faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
+const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode","faceExpo","idleFit","idleText","tearMsg"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
-  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", faceTarget: v => Math.round(v * 100) + "%", lowPaper: v => v + "장 이하", lowBattery: v => v + "% 이하", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
+  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", doneSec: v => v + "초", faceTarget: v => Math.round(v * 100) + "%", lowPaper: v => v + "장 이하", lowBattery: v => v + "% 이하", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
 function fillAdmin() {
   FIELDS.forEach(f => { const el = $(f); if (el && el !== document.activeElement) el.value = S[f]; });
   Object.keys(VIEW).forEach(f => { const v = $("v_" + f.replace("Sec", "")) || $("v_" + f); if (v) v.textContent = VIEW[f](S[f]); });
@@ -1992,8 +2029,8 @@ async function offlineStatus() {
     const reg = await navigator.serviceWorker.getRegistration();
     const names = await caches.keys(), mine = names.filter(n => n.startsWith("booth-"));
     let files = 0; for (const n of mine) files += (await (await caches.open(n)).keys()).length;
-    const cur = mine.includes("booth-v1.1.0");
-    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.1.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
+    const cur = mine.includes("booth-v1.2.0");
+    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.2.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
   } catch (e) { el.textContent = "확인하지 못했어요: " + (e.message || e); }
 }
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
