@@ -27,6 +27,16 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 /* idle */
 #idle{cursor:pointer}
+#idleBg{position:absolute;inset:0;background-position:center;background-repeat:no-repeat;background-size:cover;display:none;z-index:0}
+#idle.hasbg #idleBg{display:block}
+#idle.hasbg .receipt{display:none}
+#idle > *:not(#idleBg){position:relative;z-index:1}
+#idle.hasbg #idleCopy{position:absolute;left:0;right:0;bottom:84px;padding:18px;text-shadow:0 2px 14px rgba(0,0,0,.85)}
+#idle.hasbg.textTop #idleCopy{bottom:auto;top:40px}
+#idle.notext #idleCopy{display:none}
+#idle.hasbg .sub{color:#fff;opacity:.92}
+body.idlebg #printerBadge{background:rgba(0,0,0,.55);padding:6px 10px;border-radius:14px;color:#ddd}
+body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px;color:#ddd;opacity:1}
 #idle .receipt{width:min(320px,60vw);aspect-ratio:54/67;background:#fbf8f2;border-radius:6px;margin-bottom:36px;
   box-shadow:0 30px 60px rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;transform:rotate(-3deg);
   background-image:radial-gradient(#1a1a1a 1px,transparent 1.2px);background-size:6px 6px;position:relative;overflow:hidden}
@@ -135,11 +145,12 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 1. 대기 화면 -->
 <section id="idle" class="screen on">
+  <div id="idleBg"></div>
   <div class="receipt"></div>
-  <p class="big pulse">화면을 터치해서 시작</p>
-  <p class="sub">한 장 찍고, 바로 뽑아가세요</p>
+  <div id="idleCopy"><p class="big pulse">화면을 터치해서 시작</p>
+  <p class="sub">한 장 찍고, 바로 뽑아가세요</p></div>
 </section>
-<div id="verTag">v1.0.1</div>
+<div id="verTag">v1.1.0</div>
 <div id="warnBar"><span id="warnText"></span><button class="btn small" id="warnBtn" style="display:none">다시 연결</button></div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
@@ -199,7 +210,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.0.1</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.1.0</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -221,7 +232,7 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.0.1</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.1.0</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -289,6 +300,23 @@ button{font:inherit;color:inherit;border:0;cursor:pointer}
     <p class="note" id="faceExpoInfo"></p>
     <p class="note" id="faceInfo">얼굴 인식: 준비 전</p>
     <p class="note">찍은 사진에서 얼굴을 찾아(여러 명도 가능) 턱선을 살짝 안쪽으로, 눈을 살짝 크게 바꿔요. "강하게"는 위 세기의 100%, "자연스럽게"는 55%로 적용돼요. 얼굴 인식 파일(facemesh 폴더)이 index.html 옆에 있어야 동작해요.</p>
+  </div>
+
+  <div class="card"><h3>대기 화면 배경</h3>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start">
+      <div id="bgThumb" style="width:180px;aspect-ratio:4/3;border-radius:10px;border:1px solid var(--line);background:var(--bg) center/cover no-repeat;display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:13px">기본 화면</div>
+      <div style="flex:1;min-width:240px">
+        <div class="row" style="justify-content:flex-start">
+          <label class="btn small" style="display:inline-block">사진 고르기 (JPG·PNG)<input type="file" id="bgFile" accept="image/*" style="display:none"></label>
+          <button class="btn small" id="bgClear">기본 화면으로</button>
+        </div>
+        <div class="grid" style="margin-top:10px">
+          <label class="field">맞추는 방식 <select id="idleFit"><option value="cover">화면 꽉 채우기 (가장자리 잘릴 수 있음)</option><option value="contain">전체 보이기 (여백 생길 수 있음)</option></select></label>
+          <label class="field">"화면을 터치해서 시작" 문구 <select id="idleText"><option value="bottom">아래쪽에 보이기</option><option value="top">위쪽에 보이기</option><option value="none">숨기기</option></select></label>
+        </div>
+        <p class="note" id="bgInfo">아이패드 화면 비율(가로 4:3 정도)로 만든 그림이 가장 잘 맞아요. 사진은 이 기기에만 저장돼요.</p>
+      </div>
+    </div>
   </div>
 
   <div class="card"><h3>날짜 도장</h3>
@@ -671,6 +699,7 @@ const HEAD_PX_DEFAULT = 567; // B1 Pro
 /* ---------------- 설정 ---------------- */
 const DEFAULTS = {
   printVia: "local", stationCode: "",
+  idleFit: "cover", idleText: "bottom",
   beautyOn: 1, beautyDefault: 1, faceSlim: 0.5, eyeBig: 0.5,
   faceExpo: "auto", faceTarget: 0.62, thermPrev: 0, lowPaper: 15, lowBattery: 20, autoReconnect: 1,
   density: 3, copies: 1, maxCopies: 4,
@@ -1812,8 +1841,8 @@ document.addEventListener("keydown", (e) => {
 });
 if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 
-const FIELDS = ["faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
-const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode","faceExpo"].includes(f)));
+const FIELDS = ["idleFit","idleText","faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
+const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode","faceExpo","idleFit","idleText"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
   sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", faceTarget: v => Math.round(v * 100) + "%", lowPaper: v => v + "장 이하", lowBattery: v => v + "% 이하", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
 function fillAdmin() {
@@ -1837,7 +1866,7 @@ function readAdmin() {
   S.stationCode = cleanCode(S.stationCode);
   if (S.printVia !== prevVia || S.stationCode !== prevCode) { if (viaStation()) connectStation(); else { if (stConn) try { stConn.close(); } catch (e) {} stConn = null; stState = null; setStationUI(); } }
   warpCache = {};
-  saveSettings(); fillAdmin(); renderAdminPreview();
+  saveSettings(); fillAdmin(); renderAdminPreview(); applyIdleLook();
   if (needFaces() && !fmLoading && !IS_STATION) loadFaceMesh();
   if (liveOn && liveCam !== S.cameraId) { stopLive(); startLive(); } // 카메라를 바꾸면 다시 켜기
   if (liveOn) $("liveVideo").style.transform = S.mirror ? "scaleX(-1)" : "none";
@@ -1899,6 +1928,8 @@ $("aConnect").onclick = () => connectPrinter();
 $("aDisconnect").onclick = async () => { userDisconnect = true; clearTimeout(reconnTimer); reconnTimer = null; if (client) try { await client.disconnect(); } catch (e) {} printerReady = false; setPrinterUI(); };
 $("warnBtn").onclick = async (e) => { e.stopPropagation(); if (lastBtDevice) { reconnTries = 0; try { await openPrinter(lastBtDevice); } catch (er) { await connectPrinter(); } } else await connectPrinter(); };
 $("aOfflineCheck").onclick = offlineStatus;
+$("bgFile").addEventListener("change", (e) => { const f = e.target.files && e.target.files[0]; if (f) setIdleBg(f); e.target.value = ""; });
+$("bgClear").onclick = async () => { try { await idb.del("idleBg"); } catch (e) {} if (bgUrl) URL.revokeObjectURL(bgUrl); bgUrl = null; applyIdleLook(); $("bgInfo").textContent = "기본 화면으로 돌렸어요."; };
 $("aRefreshCams").onclick = (e) => { e.stopPropagation(); listCameras(true); };
 $("cameraId").addEventListener("click", (e) => e.stopPropagation());
 $("cameraId").addEventListener("change", () => { S.cameraId = $("cameraId").value; saveSettings(); setFaceExpoInfo(); if (liveOn) { stopLive(); startLive(); } });
@@ -1916,6 +1947,43 @@ async function adminPrint(canvas) {
 $("aTest").onclick = () => { readAdmin(); adminPrint(buildLabel(null, 0, toneOpts(), true)); };
 $("aPrintLast").onclick = () => { readAdmin(); adminPrint(buildLabel(lastShot || sampleImage(), 0, toneOpts())); };
 
+/* ---------------- 대기 화면 배경 (IndexedDB에 저장) ---------------- */
+const idb = {
+  open() { return new Promise((res, rej) => { const r = indexedDB.open("booth", 1); r.onupgradeneeded = () => r.result.createObjectStore("assets"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
+  async get(k) { const db = await this.open(); return new Promise((res, rej) => { const q = db.transaction("assets").objectStore("assets").get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); },
+  async set(k, v) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction("assets", "readwrite"); t.objectStore("assets").put(v, k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); },
+  async del(k) { const db = await this.open(); return new Promise((res, rej) => { const t = db.transaction("assets", "readwrite"); t.objectStore("assets").delete(k); t.oncomplete = () => res(); t.onerror = () => rej(t.error); }); },
+};
+let bgUrl = null;
+function applyIdleLook() {
+  const idle = $("idle"), has = !!bgUrl;
+  idle.classList.toggle("hasbg", has); document.body.classList.toggle("idlebg", has);
+  $("idleBg").style.backgroundImage = has ? `url("${bgUrl}")` : "none";
+  $("idleBg").style.backgroundSize = S.idleFit === "contain" ? "contain" : "cover";
+  idle.classList.toggle("notext", S.idleText === "none");
+  idle.classList.toggle("textTop", S.idleText === "top");
+  const th = $("bgThumb"); if (th) { th.style.backgroundImage = has ? `url("${bgUrl}")` : "none"; th.textContent = has ? "" : "기본 화면"; }
+}
+async function loadIdleBg() {
+  try { const b = await idb.get("idleBg"); if (b) { if (bgUrl) URL.revokeObjectURL(bgUrl); bgUrl = URL.createObjectURL(b); } } catch (e) {}
+  applyIdleLook();
+}
+// 고른 사진을 화면 크기에 맞게 줄여서 저장 (큰 사진도 가볍게)
+async function setIdleBg(file) {
+  const info = $("bgInfo");
+  try {
+    const url = URL.createObjectURL(file), im = new Image(); im.src = url; await im.decode();
+    const max = 2400, k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k);
+    c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+    const blob = await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+    if (bgUrl) URL.revokeObjectURL(bgUrl); bgUrl = URL.createObjectURL(blob);
+    try { await idb.set("idleBg", blob); info.textContent = `저장했어요 (${c.width}×${c.height}). 다시 열어도 유지돼요.`; }
+    catch (e) { info.textContent = "이 브라우저에 저장하지 못했어요. 지금은 보이지만 새로고침하면 사라져요."; }
+    applyIdleLook();
+  } catch (e) { info.textContent = "이 사진을 열지 못했어요: " + (e.message || e); }
+}
+
 /* ---------------- 오프라인 저장 (서비스 워커 sw.js) ---------------- */
 async function offlineStatus() {
   const el = $("offlineInfo"); if (!el) return;
@@ -1924,8 +1992,8 @@ async function offlineStatus() {
     const reg = await navigator.serviceWorker.getRegistration();
     const names = await caches.keys(), mine = names.filter(n => n.startsWith("booth-"));
     let files = 0; for (const n of mine) files += (await (await caches.open(n)).keys()).length;
-    const cur = mine.includes("booth-v1.0.1");
-    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.0.1) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
+    const cur = mine.includes("booth-v1.1.0");
+    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.1.0) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
   } catch (e) { el.textContent = "확인하지 못했어요: " + (e.message || e); }
 }
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
@@ -1946,7 +2014,7 @@ if (IS_STATION) {
   startStationHost(); stBroadcast(); setInterval(stBroadcast, 5000);
 } else if (viaStation()) connectStation();
 if (!IS_STATION && needFaces()) setTimeout(loadFaceMesh, 1500);
-if (!IS_STATION) { $("cameraId").value = S.cameraId; listCameras(false); }
+if (!IS_STATION) { $("cameraId").value = S.cameraId; listCameras(false); loadIdleBg(); }
 if (!IS_STATION) setInterval(() => { if (viaStation()) { const was = $("pDot").classList.contains("ok"); if (was !== printReady()) setStationUI(); } }, 3000);
 // 화면 꺼짐 방지 (지원하는 브라우저만)
 async function keepAwake() { try { if (navigator.wakeLock) await navigator.wakeLock.request("screen"); } catch (e) {} }
