@@ -164,7 +164,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
   <div id="idleCopy"><p class="big pulse">화면을 터치해서 시작</p>
   <p class="sub">한 장 찍고, 바로 뽑아가세요</p></div>
 </section>
-<div id="verTag">v1.2.1</div>
+<div id="verTag">v1.2.2</div>
 <div id="warnBar"><span id="warnText"></span><button class="btn small" id="warnBtn" style="display:none">다시 연결</button></div>
 <div id="printerBadge"><span class="dot" id="pDot"></span><span id="pText">프린터 연결 안 됨</span>
   <button class="btn small" id="pConnect" style="margin-left:6px">연결</button>
@@ -245,7 +245,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 
 <!-- 출력 담당 모드 (?station) -->
 <section id="station"><div class="adminInner">
-  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.1</span></h2>
+  <h2 style="margin:0 0 6px">출력 담당 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.2</span></h2>
   <p class="sub" style="text-align:left;margin:0 0 18px">촬영 기기(아이패드)가 보낸 사진을 이 기기에 연결된 프린터로 뽑아요. 이 탭을 닫거나 잠자기 상태가 되면 안 돼요.</p>
   <div class="card"><h3>연결 코드</h3>
     <div class="code" id="stCode">------</div>
@@ -267,7 +267,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
 
 <section id="admin">
 <div class="adminInner">
-  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.1</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
+  <div class="adminHead"><h2 style="margin:0">관리자 설정 <span style="font-size:13px;color:var(--mute);font-weight:500">v1.2.2</span></h2><button class="btn small primary" id="adminClose">저장하고 닫기</button></div>
 
   <div class="card"><h3>출력 경로</h3>
     <div class="grid">
@@ -411,6 +411,7 @@ body.idlebg #verTag{background:rgba(0,0,0,.45);padding:2px 8px;border-radius:8px
       <label class="field">카메라 위치 (화면 기준) <select id="camPos"><option value="top">위 가운데</option><option value="topleft">위 왼쪽</option><option value="topright">위 오른쪽</option><option value="left">왼쪽 가운데</option><option value="right">오른쪽 가운데</option><option value="bottom">아래 가운데</option></select></label>
       <label class="field">"카메라를 보세요" 안내 <span class="v" id="v_lookSec"></span><input type="range" id="lookSec" min="0" max="3" step="0.125"></label>
       <label class="field">촬영 시작 방식 <select id="camReady"><option value="1">화면을 먼저 보여주고 "촬영하기" 버튼으로 시작</option><option value="0">터치하면 바로 카운트다운</option></select></label>
+      <label class="field">카운트다운 숫자 투명도 (낮을수록 투명) <span class="v" id="v_cdOpacity"></span><input type="range" id="cdOpacity" min="0.1" max="1" step="0.05"></label>
       <label class="field">카운트다운 (초) <span class="v" id="v_countdown"></span><input type="range" id="countdownSec" min="1" max="10" step="1"></label>
       <label class="field">다시 찍기 허용 횟수 <span class="v" id="v_retakes"></span><input type="range" id="retakes" min="0" max="5" step="1"></label>
       <label class="field">확인 화면 자동 종료 (초) <span class="v" id="v_reviewTimeout"></span><input type="range" id="reviewTimeout" min="20" max="180" step="10"></label>
@@ -751,7 +752,7 @@ const DEFAULTS = {
   labelLen: 67, areaX: 2, areaY: 2, areaW: 44, areaH: 52, rotate: 0,
   autoLevel: 1, contrast: 1.25, midtone: 0.25, detail: 0.6, sharpen: 0.3, whiteClip: 0.06, softSkin: 0.5, skinOnly: 1, grayDither: 1,
   dither: "halftone", screenPx: 5, toneStep: 0.2, denoise: 0.5, dotScale: 1,
-  cameraId: "", mirror: 1, mirrorPrint: 0, countdownSec: 3, camReady: 1, camPos: "top", lookSec: 1, retakes: 2, reviewTimeout: 90,
+  cameraId: "", mirror: 1, mirrorPrint: 0, countdownSec: 3, cdOpacity: 1, camReady: 1, camPos: "top", lookSec: 1, retakes: 2, reviewTimeout: 90,
   adminPin: "0000", printCount: 0,
 };
 const TONE_KEYS = ["printMode","grayDither","softSkin","skinOnly","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx"];
@@ -1712,6 +1713,7 @@ function placeLook() {
   Object.assign(cd.style, { left: P[0] + "%", top: (P[1] + (S.camPos === "bottom" ? -24 : 24)) + "%", transform: "translate(-50%,-50%)" });
 }
 function runCountdown() {
+  $("countdown").style.opacity = Math.min(1, Math.max(0.1, +S.cdOpacity || 1));
   const cd0 = $("countdown"); cd0.style.left = cd0.style.top = cd0.style.transform = ""; $("cam").classList.remove("look");
   const el = $("countdown"), total = +S.countdownSec * 1000, look = Math.max(0, +S.lookSec) * 1000, t0 = performance.now();
   let shown = -1;
@@ -1888,10 +1890,10 @@ document.addEventListener("keydown", (e) => {
 });
 if (/[?&]admin\b/.test(location.search)) setTimeout(openPin, 300);
 
-const FIELDS = ["tearOn","tearMsg","doneSec","idleFit","idleText","faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
+const FIELDS = ["tearOn","tearMsg","doneSec","idleFit","idleText","faceExpo","faceTarget","lowPaper","lowBattery","autoReconnect","grayDither","beautyOn","beautyDefault","faceSlim","eyeBig","softSkin","skinOnly","printVia","stationCode","stampOn","stampPos","stampFmt","stampText","stampSize","density","copies","maxCopies","autoLen","printMode","grayChunk","grayCalib","labelLen","areaX","areaY","areaW","areaH","rotate","autoLevel","contrast","midtone","detail","sharpen","whiteClip","dither","toneStep","denoise","dotScale","screenPx","cameraId","mirror","mirrorPrint","countdownSec","cdOpacity","camReady","camPos","lookSec","retakes","reviewTimeout","adminPin"];
 const NUMERIC = new Set(FIELDS.filter(f => !["dither","cameraId","adminPin","printMode","stampPos","stampFmt","stampText","printVia","stationCode","faceExpo","idleFit","idleText","tearMsg"].includes(f)));
 const VIEW = { density: v => v, copies: v => v + "장", stampSize: v => (+v).toFixed(1) + "mm", maxCopies: v => v == 1 ? "1장 (선택 숨김)" : v + "장까지", grayChunk: v => v + " 바이트", contrast: v => (+v).toFixed(2), midtone: v => (+v).toFixed(2), detail: v => (+v).toFixed(2),
-  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", doneSec: v => v + "초", faceTarget: v => Math.round(v * 100) + "%", lowPaper: v => v + "장 이하", lowBattery: v => v + "% 이하", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
+  sharpen: v => (+v).toFixed(2), whiteClip: v => Math.round(v * 100) + "%", faceSlim: v => Math.round(v * 100) + "%", doneSec: v => v + "초", faceTarget: v => Math.round(v * 100) + "%", lowPaper: v => v + "장 이하", lowBattery: v => v + "% 이하", eyeBig: v => Math.round(v * 100) + "%", softSkin: v => v == 0 ? "끄기" : Math.round(v * 100) + "%", toneStep: v => (+v).toFixed(2), denoise: v => (+v).toFixed(2), dotScale: v => v + "배", screenPx: v => v + "px (" + Math.round(300 / v) + "선)", countdownSec: v => v + "초", cdOpacity: v => Math.round(v * 100) + "%", lookSec: v => v == 0 ? "끄기" : "마지막 " + (+v).toFixed(3).replace(/\.?0+$/, "") + "초", retakes: v => v + "번", reviewTimeout: v => v + "초" };
 function fillAdmin() {
   FIELDS.forEach(f => { const el = $(f); if (el && el !== document.activeElement) el.value = S[f]; });
   Object.keys(VIEW).forEach(f => { const v = $("v_" + f.replace("Sec", "")) || $("v_" + f); if (v) v.textContent = VIEW[f](S[f]); });
@@ -2039,8 +2041,8 @@ async function offlineStatus() {
     const reg = await navigator.serviceWorker.getRegistration();
     const names = await caches.keys(), mine = names.filter(n => n.startsWith("booth-"));
     let files = 0; for (const n of mine) files += (await (await caches.open(n)).keys()).length;
-    const cur = mine.includes("booth-v1.2.1");
-    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.2.1) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
+    const cur = mine.includes("booth-v1.2.2");
+    el.textContent = reg ? (cur && files >= 10 ? `저장됨 · 파일 ${files}개 (v1.2.2) — 인터넷 없이도 열려요` : `저장 중이거나 일부만 저장됨 · 파일 ${files}개 — 인터넷이 될 때 잠시 기다린 뒤 다시 확인하세요`) : "아직 저장되지 않았어요 (sw.js 파일이 올라가 있는지 확인하세요)";
   } catch (e) { el.textContent = "확인하지 못했어요: " + (e.message || e); }
 }
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
